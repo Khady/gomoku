@@ -1,5 +1,5 @@
 reste a faire :
-- des test sur la regle optionelle de non prenable
-- regle des double trois
-- interface graphique + boucle de jeu et acquisition des mouvement des joueur
+- interface graphique et acquisition des mouvement des joueur
+- link des partie arbitre et GUI ( + boucle de jeu)
+- des test supplementaire sur les regles optionelles
 - factorer mes deux champs de if si quelqu'un a la motiv
