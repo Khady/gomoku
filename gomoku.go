@@ -6,7 +6,7 @@ type Gomoku struct {
 	board []int
 	gameType bool
 	endgameTake bool
-	doublethree bool
+	doubleThree bool
 	playerTurn int
 	countTake[2] int
 }
@@ -33,8 +33,113 @@ func (p *Gomoku)victory(x, y int) bool {
 	return false
 }
 
-func (p *Gomoku)verifDoubleThree(x, y, player int) {
-	
+func Min(x, y int) int {
+	if x > y {
+		return y
+	}
+	return x
+}
+
+func Max(x, y int) int {
+	if x > y {
+		return x
+	}
+	return y
+}
+
+func (p *Gomoku)verifEnemy(x, y, varx, vary, flag int) bool {
+	if flag == 1 {
+		x = x + varx
+		y = y + vary
+	}
+	if varx > 0 {
+		varx = 1
+	} else if varx < 0 {
+		varx = -1
+	}
+	if vary > 0 {
+		vary = 1
+	} else if vary < 0 {
+		vary = -1
+	}
+	if p.board[x + varx + (y + vary) * 19] == p.otherPlayer() || p.board[x - varx + (y - vary) * 19] == p.otherPlayer() {
+		return false
+	}
+	return true
+}
+
+func (p *Gomoku)verifThree(x, y, prof, varx1, vary1, varx2, vary2 int) int { // oubli de verification des empty + probleme avec l'exemple en cours.
+		if x > 0 && y > 0 && x < 18 && y < 18 && x > 0 - Min(varx1, varx2) && x < 18 - Max(varx1, varx2) && y > 0 - Min(vary1, vary2) && y < 18 - Max(vary1, vary2) && 
+		p.board[x + varx1 + (y + vary1) * 19] == p.playerTurn && p.board[x + varx2 + (y + vary2) * 19] == p.playerTurn && 
+		p.verifEnemy(x, y, varx1, vary1, 1) && p.verifEnemy(x, y, varx2, vary2, 1) && p.verifEnemy(x, y, varx1, vary1, 0) && p.verifEnemy(x, y, varx2, vary2, 0) {
+		if prof == 0 && (p.verifDoubleThree(x + varx1,  y + vary1, 1) || p.verifDoubleThree(x - varx2,  y + vary2, 1)) || prof == 1 {
+			return 2
+		}
+		return 1
+	}
+	return 0
+}
+
+func (p *Gomoku)verifDoubleThree(x, y, prof int) bool {
+	count := 0
+	verif1 := p.verifThree(x, y, prof, 1, 0, -1, 0)
+	verif2 := p.verifThree(x, y, prof, 1, 0, 2, 0)
+	verif3 := p.verifThree(x, y, prof, -1, 0, -2, 0)
+	verif4 := p.verifThree(x, y, prof, -2, 0, -3, 0)
+	verif5 := p.verifThree(x, y, prof, 2, 0, 3, 0)
+	verif6 := p.verifThree(x, y, prof, -1, 0, -3, 0)
+	verif7 := p.verifThree(x, y, prof, 1, 0, 3, 0)
+	if verif1 == 2 || verif2 == 2 || verif3 == 2 || verif4 == 2 || verif5 == 2 || verif6 == 2 || verif7 == 2 {
+		return true
+	} else if verif1 == 1 || verif2 == 1 || verif3 == 1 || verif4 == 1 || verif5 == 1 || verif6 == 1 || verif7 == 1 {
+		count += 1
+	}
+	verif1 = p.verifThree(x, y, prof, 0, 1, 0, -1)
+	verif2 = p.verifThree(x, y, prof, 0, 1, 0, 2)
+	verif3 = p.verifThree(x, y, prof, 0, -1, 0, -2)
+	verif4 = p.verifThree(x, y, prof, 0, -2, 0, -3)
+	verif5 = p.verifThree(x, y, prof, 0, 2, 0, 3)
+	verif6 = p.verifThree(x, y, prof, 0, -1, 0, -3)
+	verif7 = p.verifThree(x, y, prof, 0, 1, 0, 3)
+	if verif1 == 2 || verif2 == 2 || verif3 == 2 || verif4 == 2 || verif5 == 2 || verif6 == 2 || verif7 == 2 {
+		return true
+	} else if verif1 == 1 || verif2 == 1 || verif3 == 1 || verif4 == 1 || verif5 == 1 || verif6 == 1 || verif7 == 1 {
+		count += 1
+	}
+	if count > 1 {
+		return true
+	}
+	verif1 = p.verifThree(x, y, prof, 1, 1, -1, -1)
+	verif2 = p.verifThree(x, y, prof, 1, 1, 2, 2)
+	verif3 = p.verifThree(x, y, prof, -1, -1, -2, -2)
+	verif4 = p.verifThree(x, y, prof, -2, -2, -3, -3)
+	verif5 = p.verifThree(x, y, prof, 2, 2, 3, 3)
+	verif6 = p.verifThree(x, y, prof, -1, -1, -3, -3)
+	verif7 = p.verifThree(x, y, prof, 1, 1, 3, 3)
+	if verif1 == 2 || verif2 == 2 || verif3 == 2 || verif4 == 2 || verif5 == 2 || verif6 == 2 || verif7 == 2 {
+		return true
+	} else if verif1 == 1 || verif2 == 1 || verif3 == 1 || verif4 == 1 || verif5 == 1 || verif6 == 1 || verif7 == 1 {
+		count += 1
+	}
+	if count > 1 {
+		return true
+	}
+	verif1 = p.verifThree(x, y, prof, 1, -1, -1, 1)
+	verif2 = p.verifThree(x, y, prof, 1, -1, 2, -2)
+	verif3 = p.verifThree(x, y, prof, -1, 1, -2, 2)
+	verif4 = p.verifThree(x, y, prof, -2, 2, -3, 3)
+	verif5 = p.verifThree(x, y, prof, 2, -2, 3, -3)
+	verif6 = p.verifThree(x, y, prof, 1, -1, 3, -3)
+	verif7 = p.verifThree(x, y, prof, -1, 1, -3, 3)
+	if verif1 == 2 || verif2 == 2 || verif3 == 2 || verif4 == 2 || verif5 == 2 || verif6 == 2 || verif7 == 2 {
+		return true
+	} else if verif1 == 1 || verif2 == 1 || verif3 == 1 || verif4 == 1 || verif5 == 1 || verif6 == 1 || verif7 == 1 {
+		count += 1
+	}
+	if count > 1 {
+		return true
+	}
+	return false
 }
 
 func (p *Gomoku)otherPlayer() int {
@@ -89,10 +194,10 @@ func (p *Gomoku)verifNotTakable(x, y int) bool {
 }
 
 func (p *Gomoku)Play(x, y int) int {
-	if p.board[x + y * 19] == 0 {
+	if p.board[x + y * 19] == 0 && (p.doubleThree == false || p.verifDoubleThree(x, y, 0) == false) {
 		p.board[x + y * 19] = p.playerTurn
 	} else {
-		fmt.Println("already occupied")
+		fmt.Println("move not valid")
 	}
 	p.prise(x, y)
 	if p.victory(x, y) {
