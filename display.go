@@ -1,21 +1,21 @@
 package main
 
 import (
-	"os"
 	"fmt"
+	"github.com/mattn/go-gtk/gdk"
 	"github.com/mattn/go-gtk/glib"
 	"github.com/mattn/go-gtk/gtk"
-	"github.com/mattn/go-gtk/gdk"
+	"os"
 	"unsafe"
 )
 
 var (
 	HEIGHT = 800
-	WIDTH = HEIGHT
-	INTER = HEIGHT / 20
-	DEC = INTER / 2
+	WIDTH  = HEIGHT
+	INTER  = HEIGHT / 20
+	DEC    = INTER / 2
 	CIRCLE = DEC / 2
-	STONE = CIRCLE + DEC
+	STONE  = CIRCLE + DEC
 )
 
 func clean_side(gc *gdk.GdkGC, pixmap *gdk.GdkPixmap, x1, y1, x2, y2 int) {
@@ -30,30 +30,30 @@ func clean_side(gc *gdk.GdkGC, pixmap *gdk.GdkPixmap, x1, y1, x2, y2 int) {
 func draw_square(gc *gdk.GdkGC, pixmap *gdk.GdkPixmap, x, y int) {
 	gc.SetRgbFgColor(gdk.Color("grey"))
 	pixmap.GetDrawable().DrawRectangle(gc, true,
-		x * INTER + DEC,
-		y * INTER + DEC,
-		x * INTER + INTER + DEC,
-		y * INTER + INTER + DEC)
+		x*INTER+DEC,
+		y*INTER+DEC,
+		x*INTER+INTER+DEC,
+		y*INTER+INTER+DEC)
 	gc.SetRgbFgColor(gdk.Color("black"))
 	pixmap.GetDrawable().DrawLine(gc,
-		x * INTER + INTER / 2 + DEC,
-		y * INTER + DEC,
-		x * INTER + INTER / 2 + DEC,
-		y * INTER + INTER + DEC)
+		x*INTER+INTER/2+DEC,
+		y*INTER+DEC,
+		x*INTER+INTER/2+DEC,
+		y*INTER+INTER+DEC)
 	pixmap.GetDrawable().DrawLine(gc,
-		x * INTER + DEC,
-		y * INTER + INTER / 2 + DEC,
-		x * INTER + INTER + DEC,
-		y * INTER + INTER / 2 + DEC)
+		x*INTER+DEC,
+		y*INTER+INTER/2+DEC,
+		x*INTER+INTER+DEC,
+		y*INTER+INTER/2+DEC)
 	if x == 0 {
 		clean_side(gc, pixmap, 0, 0, INTER, -1) // LEFT
 	} else if x == 18 {
-		clean_side(gc, pixmap, HEIGHT - INTER + 1, 0, HEIGHT, -1) // RIGHT
+		clean_side(gc, pixmap, HEIGHT-INTER+1, 0, HEIGHT, -1) // RIGHT
 	}
 	if y == 0 {
 		clean_side(gc, pixmap, 0, 0, -1, INTER) // TOP
 	} else if y == 18 {
-		clean_side(gc, pixmap, 0, HEIGHT - INTER + 1, -1, -1)	  // BOT
+		clean_side(gc, pixmap, 0, HEIGHT-INTER+1, -1, -1) // BOT
 	}
 }
 
@@ -64,24 +64,24 @@ func display_init_grid(gc *gdk.GdkGC, pixmap *gdk.GdkPixmap) {
 		}
 	}
 	gc.SetRgbFgColor(gdk.Color("black"))
-	pixmap.GetDrawable().DrawArc(gc, true, (4 * INTER) - (CIRCLE / 2), (4 * INTER) - (CIRCLE / 2),
-		CIRCLE, CIRCLE, 0, 64 * 360)
-	pixmap.GetDrawable().DrawArc(gc, true, (10 * INTER) - (CIRCLE / 2), (4 * INTER) - (CIRCLE / 2),
-		CIRCLE, CIRCLE, 0, 64 * 360)
-	pixmap.GetDrawable().DrawArc(gc, true, (16 * INTER) - (CIRCLE / 2), (4 * INTER) - (CIRCLE / 2),
-		CIRCLE, CIRCLE, 0, 64 * 360)
-	pixmap.GetDrawable().DrawArc(gc, true, (4 * INTER) - (CIRCLE / 2), (10 * INTER) - (CIRCLE / 2),
-		CIRCLE, CIRCLE, 0, 64 * 360)
-	pixmap.GetDrawable().DrawArc(gc, true, (10 * INTER) - (CIRCLE / 2), (10 * INTER) - (CIRCLE / 2),
-		CIRCLE, CIRCLE, 0, 64 * 360)
-	pixmap.GetDrawable().DrawArc(gc, true, (16 * INTER) - (CIRCLE / 2), (10 * INTER) - (CIRCLE / 2),
-		CIRCLE, CIRCLE, 0, 64 * 360)
-	pixmap.GetDrawable().DrawArc(gc, true, (4 * INTER) - (CIRCLE / 2), (16 * INTER) - (CIRCLE / 2),
-		CIRCLE, CIRCLE, 0, 64 * 360)
-	pixmap.GetDrawable().DrawArc(gc, true, (10 * INTER) - (CIRCLE / 2), (16 * INTER) - (CIRCLE / 2),
-		CIRCLE, CIRCLE, 0, 64 * 360)
-	pixmap.GetDrawable().DrawArc(gc, true, (16 * INTER) - (CIRCLE / 2), (16 * INTER) - (CIRCLE / 2),
-		CIRCLE, CIRCLE, 0, 64 * 360)
+	pixmap.GetDrawable().DrawArc(gc, true, (4*INTER)-(CIRCLE/2), (4*INTER)-(CIRCLE/2),
+		CIRCLE, CIRCLE, 0, 64*360)
+	pixmap.GetDrawable().DrawArc(gc, true, (10*INTER)-(CIRCLE/2), (4*INTER)-(CIRCLE/2),
+		CIRCLE, CIRCLE, 0, 64*360)
+	pixmap.GetDrawable().DrawArc(gc, true, (16*INTER)-(CIRCLE/2), (4*INTER)-(CIRCLE/2),
+		CIRCLE, CIRCLE, 0, 64*360)
+	pixmap.GetDrawable().DrawArc(gc, true, (4*INTER)-(CIRCLE/2), (10*INTER)-(CIRCLE/2),
+		CIRCLE, CIRCLE, 0, 64*360)
+	pixmap.GetDrawable().DrawArc(gc, true, (10*INTER)-(CIRCLE/2), (10*INTER)-(CIRCLE/2),
+		CIRCLE, CIRCLE, 0, 64*360)
+	pixmap.GetDrawable().DrawArc(gc, true, (16*INTER)-(CIRCLE/2), (10*INTER)-(CIRCLE/2),
+		CIRCLE, CIRCLE, 0, 64*360)
+	pixmap.GetDrawable().DrawArc(gc, true, (4*INTER)-(CIRCLE/2), (16*INTER)-(CIRCLE/2),
+		CIRCLE, CIRCLE, 0, 64*360)
+	pixmap.GetDrawable().DrawArc(gc, true, (10*INTER)-(CIRCLE/2), (16*INTER)-(CIRCLE/2),
+		CIRCLE, CIRCLE, 0, 64*360)
+	pixmap.GetDrawable().DrawArc(gc, true, (16*INTER)-(CIRCLE/2), (16*INTER)-(CIRCLE/2),
+		CIRCLE, CIRCLE, 0, 64*360)
 }
 
 func init_display(game Gomoku) {
@@ -126,7 +126,7 @@ func init_display(game Gomoku) {
 		} else {
 			x, y = int(mev.X), int(mev.Y)
 		}
-		vic, err := game.Play(((x - INTER / 2) / INTER), ((y - INTER / 2) / INTER))
+		vic, err := game.Play(((x - INTER/2) / INTER), ((y - INTER/2) / INTER))
 		if err != nil {
 			return
 		}
@@ -137,9 +137,9 @@ func init_display(game Gomoku) {
 			gc.SetRgbFgColor(gdk.Color("white"))
 			player = 1
 		}
-		x = ((x - INTER / 2) / INTER) * INTER + INTER
-		y = ((y - INTER / 2) / INTER) * INTER + INTER
-		pixmap.GetDrawable().DrawArc(gc, true, x - (STONE / 2), y - (STONE / 2), STONE, STONE, 0, 64 * 360)
+		x = ((x-INTER/2)/INTER)*INTER + INTER
+		y = ((y-INTER/2)/INTER)*INTER + INTER
+		pixmap.GetDrawable().DrawArc(gc, true, x-(STONE/2), y-(STONE/2), STONE, STONE, 0, 64*360)
 		if vic != 0 {
 			fmt.Println("Player", vic, "win")
 		}
