@@ -127,7 +127,8 @@ func board_display(game Gomoku) {
 		} else {
 			x, y = int(mev.X), int(mev.Y)
 		}
-		if x < 0 || x >= 19 || y < 0 || y >= 19 {
+		if ((x - INTER/2) / INTER) < 0 || ((x - INTER/2) / INTER) >= 19 ||
+			((y - INTER/2) / INTER) < 0 || ((y - INTER/2) / INTER) >= 19 {
 			return
 		}
 		vic, err := game.Play(((x - INTER/2) / INTER), ((y - INTER/2) / INTER))
