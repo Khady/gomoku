@@ -88,6 +88,7 @@ func board_display(game Gomoku) {
 	gtk.Init(&os.Args)
 	window := gtk.Window(gtk.GTK_WINDOW_TOPLEVEL)
 	window.SetTitle("Gomoku")
+	window.SetResizable(false)
 	window.Connect("destroy", func() {
 		println("got destroy!")
 		gtk.MainQuit()
@@ -125,6 +126,9 @@ func board_display(game Gomoku) {
 			gdkwin.GetPointer(&x, &y, &mt)
 		} else {
 			x, y = int(mev.X), int(mev.Y)
+		}
+		if x < 0 || x >= 19 || y < 0 || y >= 19 {
+			return
 		}
 		vic, err := game.Play(((x - INTER/2) / INTER), ((y - INTER/2) / INTER))
 		if err != nil {
