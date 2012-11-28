@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"errors"
+)
 
 type Gomoku struct {
 	board []int
@@ -69,8 +72,8 @@ func (p *Gomoku)verifEnemy(x, y, varx, vary, flag int) bool {
 }
 
 func (p *Gomoku)verifThree(x, y, prof, varx1, vary1, varx2, vary2 int) int { // oubli de verification des empty + probleme avec l'exemple en cours.
-		if x > 0 && y > 0 && x < 18 && y < 18 && x > 0 - Min(varx1, varx2) && x < 18 - Max(varx1, varx2) && y > 0 - Min(vary1, vary2) && y < 18 - Max(vary1, vary2) && 
-		p.board[x + varx1 + (y + vary1) * 19] == p.playerTurn && p.board[x + varx2 + (y + vary2) * 19] == p.playerTurn && 
+		if x > 0 && y > 0 && x < 18 && y < 18 && x > 0 - Min(varx1, varx2) && x < 18 - Max(varx1, varx2) && y > 0 - Min(vary1, vary2) && y < 18 - Max(vary1, vary2) &&
+		p.board[x + varx1 + (y + vary1) * 19] == p.playerTurn && p.board[x + varx2 + (y + vary2) * 19] == p.playerTurn &&
 		p.verifEnemy(x, y, varx1, vary1, 1) && p.verifEnemy(x, y, varx2, vary2, 1) && p.verifEnemy(x, y, varx1, vary1, 0) && p.verifEnemy(x, y, varx2, vary2, 0) {
 		if prof == 0 && (p.verifDoubleThree(x + varx1,  y + vary1, 1) || p.verifDoubleThree(x - varx2,  y + vary2, 1)) || prof == 1 {
 			return 2
@@ -151,7 +154,7 @@ func (p *Gomoku)otherPlayer() int {
 
 func (p *Gomoku)verifNotTakable(x, y int) bool {
 	if x <= 16 && x >= 1 && p.board[x + 1 + y * 19] == p.playerTurn &&
-		(p.board[x + 2 + y * 19] == 0 || p.board[x - 1 + y * 19] == 0) && 
+		(p.board[x + 2 + y * 19] == 0 || p.board[x - 1 + y * 19] == 0) &&
 		(p.board[x + 2 + y * 19] == p.otherPlayer() || p.board[x - 1 + y * 19] == p.otherPlayer()) {
 		return false
 	}
@@ -193,18 +196,18 @@ func (p *Gomoku)verifNotTakable(x, y int) bool {
 	return true
 }
 
-func (p *Gomoku)Play(x, y int) int {
+func (p *Gomoku)Play(x, y int) (int, error) {
 	if p.board[x + y * 19] == 0 && (p.doubleThree == false || p.verifDoubleThree(x, y, 0) == false) {
 		p.board[x + y * 19] = p.playerTurn
 	} else {
-		fmt.Println("move not valid")
+		return 0, errors.New("move not valid")
 	}
 	p.prise(x, y)
 	if p.victory(x, y) {
-		return p.playerTurn
+		return p.playerTurn, nil
 	}
 	p.changePlayerTurn()
-	return 0
+	return 0, nil
 }
 
 func (p *Gomoku)changePlayerTurn() {

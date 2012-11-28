@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"fmt"
 	"github.com/mattn/go-gtk/glib"
 	"github.com/mattn/go-gtk/gtk"
 	"github.com/mattn/go-gtk/gdk"
@@ -83,7 +84,7 @@ func display_init_grid(gc *gdk.GdkGC, pixmap *gdk.GdkPixmap) {
 		CIRCLE, CIRCLE, 0, 64 * 360)
 }
 
-func init_display() {
+func init_display(game Gomoku) {
 	gtk.Init(&os.Args)
 	window := gtk.Window(gtk.GTK_WINDOW_TOPLEVEL)
 	window.SetTitle("Gomoku")
@@ -125,6 +126,10 @@ func init_display() {
 		} else {
 			x, y = int(mev.X), int(mev.Y)
 		}
+		vic, err := game.Play(((x - INTER / 2) / INTER), ((y - INTER / 2) / INTER))
+		if err != nil {
+			return
+		}
 		if player == 1 {
 			gc.SetRgbFgColor(gdk.Color("black"))
 			player = 2
@@ -135,6 +140,9 @@ func init_display() {
 		x = ((x - INTER / 2) / INTER) * INTER + INTER
 		y = ((y - INTER / 2) / INTER) * INTER + INTER
 		pixmap.GetDrawable().DrawArc(gc, true, x - (STONE / 2), y - (STONE / 2), STONE, STONE, 0, 64 * 360)
+		if vic != 0 {
+			fmt.Println("Player", vic, "win")
+		}
 		drawingarea.GetWindow().Invalidate(nil, false)
 	})
 
