@@ -1,6 +1,6 @@
 package main
 
-// import "fmt"
+import "fmt"
 
 func main() {
 	game := Gomoku{make([]int, 361), true, true, true, 1, [2]int{10, 10}}
@@ -23,5 +23,7 @@ func main() {
 	// 	fmt.Println("win")
 	// }
 	// game.Debug_aff()
-	init_display(game)
+	mode := game_mode()
+	fmt.Println("Game's mode is", mode)
+	board_display(game)
 }

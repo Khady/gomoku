@@ -84,7 +84,7 @@ func display_init_grid(gc *gdk.GdkGC, pixmap *gdk.GdkPixmap) {
 		CIRCLE, CIRCLE, 0, 64*360)
 }
 
-func init_display(game Gomoku) {
+func board_display(game Gomoku) {
 	gtk.Init(&os.Args)
 	window := gtk.Window(gtk.GTK_WINDOW_TOPLEVEL)
 	window.SetTitle("Gomoku")
@@ -159,4 +159,30 @@ func init_display(game Gomoku) {
 	window.SetSizeRequest(WIDTH, HEIGHT)
 	window.ShowAll()
 	gtk.Main()
+}
+
+func game_mode() int {
+	gtk.Init(&os.Args)
+	window := gtk.Window(gtk.GTK_WINDOW_TOPLEVEL)
+	window.SetTitle("Gomoku")
+	window.Connect("destroy", func() {
+		gtk.MainQuit()
+	})
+
+	var mode int
+
+	vbox := gtk.VBox(true, 0)
+	pvp := gtk.ButtonWithLabel("Player Vs Player")
+	pvp.Clicked(func() {
+		mode = 0
+		window.Destroy()
+	})
+	pvai := gtk.Label("Player Vs Ai")
+	vbox.Add(pvp)
+	vbox.Add(pvai)
+	pvp.Show()
+	window.Add(vbox)
+	window.ShowAll()
+	gtk.Main()
+	return mode
 }
