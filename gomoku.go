@@ -27,6 +27,16 @@ func (p *Gomoku) verifLine(x, y, count, time, varx, vary int) int {
 }
 
 func (p *Gomoku) victory(x, y int) bool {
+	if p.victoryPion(x, y) || p.victoryPion(x + 1, y) || p.victoryPion(x + 2, y) ||
+		p.victoryPion(x, y + 1) || p.victoryPion(x, y + 2) || p.victoryPion(x + 1, y + 1) ||
+		p.victoryPion(x + 2, y + 2) || p.victoryPion(x - 1, y - 1) || p.victoryPion(x + 1, y - 1) ||
+		p.victoryPion(x + 2, y - 2) || p.victoryPion(x - 1, y + 1) || p.victoryPion(x - 2, y + 2) {
+		return true
+	}
+	return false
+}
+
+func (p *Gomoku) victoryPion(x, y int) bool {
 	if p.countTake[p.playerTurn-1] == 0 || (p.verifLine(x, y, p.verifLine(x, y, 1, 1, -1, 0), 1, 1, 0) >= 5 ||
 		p.verifLine(x, y, p.verifLine(x, y, 1, 1, 0, 1), 1, 0, -1) >= 5 ||
 		p.verifLine(x, y, p.verifLine(x, y, 1, 1, -1, -1), 1, 1, 1) >= 5 ||
@@ -75,7 +85,7 @@ func (p *Gomoku) verifThree(x, y, prof, varx1, vary1, varx2, vary2 int) int { //
 	if x > 0 && y > 0 && x < 18 && y < 18 && x > 0-Min(varx1, varx2) && x < 18-Max(varx1, varx2) && y > 0-Min(vary1, vary2) && y < 18-Max(vary1, vary2) &&
 		p.board[x+varx1+(y+vary1)*19] == p.playerTurn && p.board[x+varx2+(y+vary2)*19] == p.playerTurn &&
 		p.verifEnemy(x, y, varx1, vary1, 1) && p.verifEnemy(x, y, varx2, vary2, 1) && p.verifEnemy(x, y, varx1, vary1, 0) && p.verifEnemy(x, y, varx2, vary2, 0) {
-		if prof == 0 && (p.verifDoubleThree(x+varx1, y+vary1, 1) || p.verifDoubleThree(x-varx2, y+vary2, 1)) || prof == 1 {
+		if prof == 0 && (p.verifDoubleThree(x+varx1, y+vary1, 1) || p.verifDoubleThree(x-varx2, y+vary2, 1)){
 			return 2
 		}
 		return 1
@@ -197,9 +207,14 @@ func (p *Gomoku) verifNotTakable(x, y int) bool {
 }
 
 func (p *Gomoku) Play(x, y int) (int, error) {
-	if p.board[x+y*19] == 0 && (p.doubleThree == false || p.verifDoubleThree(x, y, 0) == false) {
+
+	if p.board[x+y*19] == 0 {
 		p.board[x+y*19] = p.playerTurn
 	} else {
+		return 0, errors.New("move not valid")
+	}
+	if p.board[x+y*19] != 0 && (p.doubleThree == true && p.verifDoubleThree(x, y, 0) == true) {
+		p.board[x+y*19] = 0
 		return 0, errors.New("move not valid")
 	}
 	p.prise(x, y)

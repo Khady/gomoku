@@ -132,6 +132,7 @@ func board_display(game Gomoku) {
 			return
 		}
 		vic, err := game.Play(((x - INTER/2) / INTER), ((y - INTER/2) / INTER))
+		game.Debug_aff()
 		if err != nil {
 			return
 		}
