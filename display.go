@@ -184,6 +184,7 @@ func game_mode(winner string) int {
 	if len(WINNER) != 0 {
 		winner := gtk.Label(string(WINNER))
 		vbox.Add(winner)
+		WINNER = ""
 	}
 	hbox := gtk.HBox(true, 0)
 	pvp := gtk.ButtonWithLabel("Player Vs Player")

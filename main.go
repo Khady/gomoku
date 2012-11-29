@@ -3,7 +3,6 @@ package main
 import "fmt"
 
 func main() {
-	game := Gomoku{make([]int, 361), true, true, true, 1, [2]int{10, 10}}
 	// game.Play(1, 0)
 	// game.Play(2, 0)
 	// game.Play(1, 1)
@@ -24,6 +23,7 @@ func main() {
 	// }
 	// game.Debug_aff()
 	for {
+		game := Gomoku{make([]int, 361), true, true, true, 1, [2]int{10, 10}}
 		mode := game_mode(WINNER)
 		if mode == 2 {
 			return
