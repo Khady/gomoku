@@ -23,7 +23,12 @@ func main() {
 	// 	fmt.Println("win")
 	// }
 	// game.Debug_aff()
-	mode := game_mode()
-	fmt.Println("Game's mode is", mode)
-	board_display(game)
+	for {
+		mode := game_mode(WINNER)
+		if mode == 2 {
+			return
+		}
+		fmt.Println("Game's mode is", mode)
+		board_display(game)
+	}
 }

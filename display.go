@@ -16,6 +16,7 @@ var (
 	DEC    = INTER / 2
 	CIRCLE = DEC / 2
 	STONE  = CIRCLE + DEC
+	WINNER string
 )
 
 func clean_side(gc *gdk.GdkGC, pixmap *gdk.GdkPixmap, x1, y1, x2, y2 int) {
@@ -147,7 +148,9 @@ func board_display(game Gomoku) {
 		y = ((y-INTER/2)/INTER)*INTER + INTER
 		pixmap.GetDrawable().DrawArc(gc, true, x-(STONE/2), y-(STONE/2), STONE, STONE, 0, 64*360)
 		if vic != 0 {
-			fmt.Println("Player", vic, "win")
+			WINNER = fmt.Sprintf("And the winner is \"Player %d\"", vic)
+			window.Destroy()
+			return
 		}
 		drawingarea.GetWindow().Invalidate(nil, false)
 	})
@@ -167,7 +170,7 @@ func board_display(game Gomoku) {
 	gtk.Main()
 }
 
-func game_mode() int {
+func game_mode(winner string) int {
 	gtk.Init(&os.Args)
 	window := gtk.Window(gtk.GTK_WINDOW_TOPLEVEL)
 	window.SetTitle("Gomoku")
@@ -178,14 +181,26 @@ func game_mode() int {
 	var mode int
 
 	vbox := gtk.VBox(true, 0)
+	if len(WINNER) != 0 {
+		winner := gtk.Label(string(WINNER))
+		vbox.Add(winner)
+	}
+	hbox := gtk.HBox(true, 0)
 	pvp := gtk.ButtonWithLabel("Player Vs Player")
 	pvp.Clicked(func() {
 		mode = 0
 		window.Destroy()
 	})
 	pvai := gtk.Label("Player Vs Ai")
-	vbox.Add(pvp)
-	vbox.Add(pvai)
+	quit := gtk.ButtonWithLabel("Quit")
+	quit.Clicked(func() {
+		mode = 2
+		window.Destroy()
+	})
+	hbox.Add(pvp)
+	hbox.Add(pvai)
+	vbox.Add(hbox)
+	vbox.Add(quit)
 	pvp.Show()
 	window.Add(vbox)
 	window.ShowAll()
