@@ -37,10 +37,10 @@ func (p *Gomoku) victory(x, y int) bool {
 }
 
 func (p *Gomoku) victoryPion(x, y int) bool {
-	if p.countTake[p.playerTurn-1] == 0 || (p.verifLine(x, y, p.verifLine(x, y, 1, 1, -1, 0), 1, 1, 0) >= 5 ||
-		p.verifLine(x, y, p.verifLine(x, y, 1, 1, 0, 1), 1, 0, -1) >= 5 ||
-		p.verifLine(x, y, p.verifLine(x, y, 1, 1, -1, -1), 1, 1, 1) >= 5 ||
-		p.verifLine(x, y, p.verifLine(x, y, 1, 1, -1, +1), 1, 1, -1) >= 5) && (p.endgameTake == false || p.verifNotTakable(x, y)) {
+	if p.countTake[p.playerTurn-1] == 0 || (p.verifLine(x, y, p.verifLine(x, y, 0, 0, -1, 0), 0, 1, 0) >= 5 ||
+		p.verifLine(x, y, p.verifLine(x, y, 0, 0, 0, 1), 0, 0, -1) >= 5 ||
+		p.verifLine(x, y, p.verifLine(x, y, 0, 0, -1, -1), 0, 1, 1) >= 5 ||
+		p.verifLine(x, y, p.verifLine(x, y, 0, 0, -1, +1), 0, 1, -1) >= 5) && (p.endgameTake == false || p.verifNotTakable(x, y)) {
 		return true
 	}
 	return false
@@ -163,15 +163,17 @@ func (p *Gomoku) otherPlayer() int {
 }
 
 func (p *Gomoku) verifNotTakable(x, y int) bool {
-	if x <= 16 && x >= 1 && p.board[x+1+y*19] == p.playerTurn &&
-		(p.board[x+2+y*19] == 0 || p.board[x-1+y*19] == 0) &&
-		(p.board[x+2+y*19] == p.otherPlayer() || p.board[x-1+y*19] == p.otherPlayer()) {
-		return false
-	}
-	if x <= 17 && x >= 2 && p.board[x-1+y*19] == p.playerTurn &&
-		(p.board[x-2+y*19] == 0 || p.board[x+1+y*19] == 0) &&
-		(p.board[x-2+y*19] == p.otherPlayer() || p.board[x+1+y*19] == p.otherPlayer()) {
-		return false
+	if y <= 18 {
+		if x <= 16 && x >= 1 && p.board[x+1+y*19] == p.playerTurn &&
+			(p.board[x+2+y*19] == 0 || p.board[x-1+y*19] == 0) &&
+			(p.board[x+2+y*19] == p.otherPlayer() || p.board[x-1+y*19] == p.otherPlayer()) {
+			return false
+		}
+		if x <= 17 && x >= 2 && p.board[x-1+y*19] == p.playerTurn &&
+			(p.board[x-2+y*19] == 0 || p.board[x+1+y*19] == 0) &&
+			(p.board[x-2+y*19] == p.otherPlayer() || p.board[x+1+y*19] == p.otherPlayer()) {
+			return false
+		}
 	}
 	if y <= 17 && y >= 2 && p.board[x+(y-1)*19] == p.playerTurn &&
 		(p.board[x+(y-2)*19] == 0 || p.board[x+(y+1)*19] == 0) &&
