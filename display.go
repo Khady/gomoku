@@ -157,6 +157,7 @@ func board_display() {
 		if err != nil {
 			return
 		}
+		statusbar.Push(context_id, fmt.Sprintf("Last move is Player %d : %d/%d", player, ((x - INTER/2) / INTER) + 1, ((y - INTER/2) / INTER) + 1))
 		for _, stone := range stones {
 			fmt.Println("stone", stone)
 			draw_square(gc, pixmap, stone[0], stone[1])
