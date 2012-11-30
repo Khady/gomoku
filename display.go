@@ -48,13 +48,17 @@ func draw_square(gc *gdk.GdkGC, pixmap *gdk.GdkPixmap, x, y int) {
 		y*INTER+INTER/2+DEC)
 	if x == 0 {
 		clean_side(gc, pixmap, 0, y*INTER+DEC, INTER, y*INTER+INTER+DEC) // LEFT
+		fmt.Println("clean left")
 	} else if x == 18 {
 		clean_side(gc, pixmap, HEIGHT-INTER+1, y*INTER+DEC, -1, y*INTER+INTER+DEC) // RIGHT
+		fmt.Println("clean right")
 	}
 	if y == 0 {
 		clean_side(gc, pixmap, x*INTER+DEC, 0, x*INTER+INTER+DEC, INTER) // TOP
+		fmt.Println("clean top")
 	} else if y == 18 {
 		clean_side(gc, pixmap, x*INTER+DEC, HEIGHT-INTER+1, x*INTER+INTER+DEC, -1) // BOT
+		fmt.Println("clean bot")
 	}
 }
 
@@ -99,7 +103,7 @@ func board_display() {
 	})
 
 	var game Gomoku
-	var endGame, doubleThree bool
+	var endGame, doubleThree, stop bool
 	var menuitem *gtk.GtkMenuItem
 	var gdkwin *gdk.GdkWindow
 	var pixmap *gdk.GdkPixmap
@@ -112,6 +116,9 @@ func board_display() {
 
 	menubar := gtk.MenuBar()
 	vbox.PackStart(menubar, false, false, 0)
+	statusbar := gtk.Statusbar()
+	context_id := statusbar.GetContextId("go-gtk")
+	statusbar.Push(context_id, "(not so) Proudly propulsed by the inglorious Gomoku Project, with love, and Golang!")
 
 	drawingarea := gtk.DrawingArea()
 
@@ -127,6 +134,9 @@ func board_display() {
 	})
 
 	drawingarea.Connect("button-press-event", func(ctx *glib.CallbackContext) {
+		if stop == true {
+			return
+		}
 		if gdkwin == nil {
 			gdkwin = drawingarea.GetWindow()
 		}
@@ -144,7 +154,6 @@ func board_display() {
 			return
 		}
 		vic, stones, err := game.Play(((x - INTER/2) / INTER), ((y - INTER/2) / INTER))
-		// game.Debug_aff()
 		if err != nil {
 			return
 		}
@@ -164,8 +173,9 @@ func board_display() {
 		pixmap.GetDrawable().DrawArc(gc, true, x-(STONE/2), y-(STONE/2), STONE, STONE, 0, 64*360)
 		if vic != 0 {
 			WINNER = fmt.Sprintf("And the winner is \"Player %d\"", vic)
-			window.Destroy()
-			return
+			context_id := statusbar.GetContextId("go-gtk")
+			statusbar.Push(context_id, WINNER)
+			stop = true
 		}
 		drawingarea.GetWindow().Invalidate(nil, false)
 	})
@@ -193,7 +203,7 @@ func board_display() {
 		display_init_grid(gc, pixmap)
 		drawingarea.Hide()
 		drawingarea.Show()
-
+		stop = false
 	})
 	submenu.Append(menuitem)
 	menuitem = gtk.MenuItemWithMnemonic("E_xit")
@@ -219,6 +229,7 @@ func board_display() {
 		display_init_grid(gc, pixmap)
 		drawingarea.Hide()
 		drawingarea.Show()
+		stop = false
 	})
 	submenu.Append(checkmenuitem)
 
@@ -234,8 +245,11 @@ func board_display() {
 		display_init_grid(gc, pixmap)
 		drawingarea.Hide()
 		drawingarea.Show()
+		stop = false
 	})
 	submenu.Append(checkmenuitem)
+
+	vbox.PackStart(statusbar, false, false, 0)
 
 	window.Add(vbox)
 	window.SetSizeRequest(WIDTH, HEIGHT)
