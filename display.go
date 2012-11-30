@@ -29,16 +29,11 @@ func clean_side(gc *gdk.GdkGC, pixmap *gdk.GdkPixmap, x1, y1, x2, y2 int) {
 }
 
 func draw_square(gc *gdk.GdkGC, pixmap *gdk.GdkPixmap, x, y int) {
-	gc.SetRgbFgColor(gdk.Color("grey"))
 	pixmap.GetDrawable().DrawRectangle(gc, true,
 		x*INTER+DEC,
 		y*INTER+DEC,
-		x*INTER+INTER+DEC,
-		y*INTER+INTER+DEC)
-	fmt.Println(x*INTER+DEC,
-		y*INTER+DEC,
-		x*INTER+INTER+DEC,
-		y*INTER+INTER+DEC)
+		(x+1)*INTER+DEC,
+		(y+1)*INTER+DEC)
 	gc.SetRgbFgColor(gdk.Color("black"))
 	pixmap.GetDrawable().DrawLine(gc,
 		x*INTER+INTER/2+DEC,
@@ -52,17 +47,13 @@ func draw_square(gc *gdk.GdkGC, pixmap *gdk.GdkPixmap, x, y int) {
 		y*INTER+INTER/2+DEC)
 	if x == 0 {
 		clean_side(gc, pixmap, 0, y*INTER+DEC, INTER, y*INTER+INTER+DEC) // LEFT
-		fmt.Println("clean left")
 	} else if x == 18 {
 		clean_side(gc, pixmap, HEIGHT-INTER+1, y*INTER+DEC, -1, y*INTER+INTER+DEC) // RIGHT
-		fmt.Println("clean right")
 	}
 	if y == 0 {
 		clean_side(gc, pixmap, x*INTER+DEC, 0, x*INTER+INTER+DEC, INTER) // TOP
-		fmt.Println("clean top")
 	} else if y == 18 {
 		clean_side(gc, pixmap, x*INTER+DEC, HEIGHT-INTER+1, x*INTER+INTER+DEC, -1) // BOT
-		fmt.Println("clean bot")
 	}
 }
 
@@ -71,6 +62,7 @@ func display_init_grid(gc *gdk.GdkGC, pixmap *gdk.GdkPixmap) {
 	pixmap.GetDrawable().DrawRectangle(gc, true, 0, 0, -1, -1)
 	for x := 0; x < 19; x++ {
 		for y := 0; y < 19; y++ {
+			gc.SetRgbFgColor(gdk.Color("grey"))
 			draw_square(gc, pixmap, x, y)
 		}
 	}
@@ -153,15 +145,15 @@ func board_display() {
 		} else {
 			x, y = int(mev.X), int(mev.Y)
 		}
-		if ((x - INTER/2) / INTER) < 0 || ((x - INTER/2) / INTER) >= 19 ||
-			((y - INTER/2) / INTER) < 0 || ((y - INTER/2) / INTER) >= 19 {
+		if ((x-INTER/2)/INTER) < 0 || ((x-INTER/2)/INTER) >= 19 ||
+			((y-INTER/2)/INTER) < 0 || ((y-INTER/2)/INTER) >= 19 {
 			return
 		}
 		vic, stones, err := game.Play(((x - INTER/2) / INTER), ((y - INTER/2) / INTER))
 		if err != nil {
 			return
 		}
-		statusbar.Push(context_id, fmt.Sprintf("Last move is Player %d : %d/%d", player, ((x - INTER/2) / INTER) + 1, ((y - INTER/2) / INTER) + 1))
+		statusbar.Push(context_id, fmt.Sprintf("Last move is Player %d : %d/%d", player, ((x-INTER/2)/INTER)+1, ((y-INTER/2)/INTER)+1))
 		for _, stone := range stones {
 			fmt.Println("stone", stone)
 			draw_square(gc, pixmap, stone[0], stone[1])
@@ -200,8 +192,8 @@ func board_display() {
 	cascademenu.SetSubmenu(submenu)
 	menuitem = gtk.MenuItemWithMnemonic("_Player Vs Player")
 	menuitem.Connect("activate", func() {
-	gc.SetRgbFgColor(gdk.Color("grey"))
-	pixmap.GetDrawable().DrawRectangle(gc, true, 0, 0, -1, -1)
+		gc.SetRgbFgColor(gdk.Color("grey"))
+		pixmap.GetDrawable().DrawRectangle(gc, true, 0, 0, -1, -1)
 		fmt.Println(endGame, doubleThree)
 		game = Gomoku{make([]int, 361), true, endGame, doubleThree, 1, [2]int{10, 10}}
 		player = 1
@@ -257,7 +249,7 @@ func board_display() {
 	vbox.PackStart(statusbar, false, false, 0)
 
 	window.Add(vbox)
-	window.SetSizeRequest(WIDTH, HEIGHT + 20)
+	window.SetSizeRequest(WIDTH, HEIGHT+20)
 	window.ShowAll()
 	gtk.Main()
 }
