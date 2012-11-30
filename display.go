@@ -35,10 +35,6 @@ func draw_square(gc *gdk.GdkGC, pixmap *gdk.GdkPixmap, x, y int) {
 		y*INTER+DEC,
 		x*INTER+INTER+DEC,
 		y*INTER+INTER+DEC)
-	fmt.Println(x, y,x*INTER+DEC,
-		y*INTER+DEC,
-		x*INTER+INTER+DEC,
-		y*INTER+INTER+DEC)
 	gc.SetRgbFgColor(gdk.Color("black"))
 	pixmap.GetDrawable().DrawLine(gc,
 		x*INTER+INTER/2+DEC,
@@ -91,9 +87,10 @@ func display_init_grid(gc *gdk.GdkGC, pixmap *gdk.GdkPixmap) {
 		CIRCLE, CIRCLE, 0, 64*360)
 }
 
-func board_display(game Gomoku) {
+func board_display() {
 	gtk.Init(&os.Args)
 	window := gtk.Window(gtk.GTK_WINDOW_TOPLEVEL)
+	window.SetPosition(gtk.GTK_WIN_POS_CENTER)
 	window.SetTitle("Gomoku")
 	window.SetResizable(false)
 	window.Connect("destroy", func() {
@@ -101,13 +98,21 @@ func board_display(game Gomoku) {
 		gtk.MainQuit()
 	})
 
+	var game Gomoku
+	var endGame, doubleThree bool
+	var menuitem *gtk.GtkMenuItem
 	var gdkwin *gdk.GdkWindow
 	var pixmap *gdk.GdkPixmap
 	var gc *gdk.GdkGC
 	var player int
 	player = 1
+	game = Gomoku{make([]int, 361), true, endGame, doubleThree, 1, [2]int{10, 10}}
 
-	vbox := gtk.VBox(true, 0)
+	vbox := gtk.VBox(false, 1)
+
+	menubar := gtk.MenuBar()
+	vbox.PackStart(menubar, false, false, 0)
+
 	drawingarea := gtk.DrawingArea()
 
 	drawingarea.Connect("configure-event", func() {
@@ -174,66 +179,56 @@ func board_display(game Gomoku) {
 	drawingarea.SetEvents(int(gdk.GDK_POINTER_MOTION_MASK | gdk.GDK_POINTER_MOTION_HINT_MASK | gdk.GDK_BUTTON_PRESS_MASK))
 	vbox.Add(drawingarea)
 
-	window.Add(vbox)
-	window.SetSizeRequest(WIDTH, HEIGHT)
-	window.ShowAll()
-	gtk.Main()
-}
+	cascademenu := gtk.MenuItemWithMnemonic("_File")
+	menubar.Append(cascademenu)
+	submenu := gtk.Menu()
+	cascademenu.SetSubmenu(submenu)
+	menuitem = gtk.MenuItemWithMnemonic("_Player Vs Player")
+	menuitem.Connect("activate", func() {
+	gc.SetRgbFgColor(gdk.Color("grey"))
+	pixmap.GetDrawable().DrawRectangle(gc, true, 0, 0, -1, -1)
+		fmt.Println(endGame, doubleThree)
+		game = Gomoku{make([]int, 361), true, endGame, doubleThree, 1, [2]int{10, 10}}
+		player = 1
+		display_init_grid(gc, pixmap)
+		drawingarea.Hide()
+		drawingarea.Show()
 
-func game_mode(winner string) (int, bool, bool) {
-	var mode int
-	var doubleThree, endGame bool
-
-	gtk.Init(&os.Args)
-	window := gtk.Window(gtk.GTK_WINDOW_TOPLEVEL)
-	window.SetTitle("Gomoku")
-	window.Connect("destroy", func() {
+	})
+	submenu.Append(menuitem)
+	menuitem = gtk.MenuItemWithMnemonic("E_xit")
+	menuitem.Connect("activate", func() {
 		gtk.MainQuit()
 	})
+	submenu.Append(menuitem)
 
-	vbox := gtk.VBox(true, 0)
-	if len(WINNER) != 0 {
-		winner := gtk.Label(string(WINNER))
-		vbox.Add(winner)
-		WINNER = ""
-	}
-	game_mode := gtk.HBox(true, 0)
-	pvp := gtk.ButtonWithLabel("Player Vs Player")
-	pvp.Clicked(func() {
-		mode = 1
-		window.Destroy()
-	})
-	pvai := gtk.Label("Player Vs Ai")
-	game_mode.Add(pvp)
-	game_mode.Add(pvai)
-	vbox.Add(game_mode)
-	rules := gtk.HBox(true, 0)
-	end := gtk.CheckButtonWithLabel("la prise de fin de partie")
-	end.Connect("toggled", func() {
-		if end.GetActive() {
-			endGame = true
-		} else {
-			endGame = false
-		}
-	})
-	three := gtk.CheckButtonWithLabel("interdiction des doubles-trois")
-	three.Connect("toggled", func() {
-		if three.GetActive() {
+	cascademenu = gtk.MenuItemWithMnemonic("_Options")
+	menubar.Append(cascademenu)
+	submenu = gtk.Menu()
+	cascademenu.SetSubmenu(submenu)
+
+	checkmenuitem := gtk.CheckMenuItemWithMnemonic("_Double trois")
+	checkmenuitem.Connect("activate", func() {
+		if doubleThree == false {
 			doubleThree = true
 		} else {
 			doubleThree = false
 		}
 	})
-	rules.Add(end)
-	rules.Add(three)
-	vbox.Add(rules)
-	quit := gtk.ButtonWithLabel("Quit")
-	quit.Clicked(func() {
-		window.Destroy()
+	submenu.Append(checkmenuitem)
+
+	checkmenuitem = gtk.CheckMenuItemWithMnemonic("P_rise de fin de partie")
+	checkmenuitem.Connect("activate", func() {
+		if endGame == false {
+			endGame = true
+		} else {
+			endGame = false
+		}
 	})
-	vbox.Add(quit)
+	submenu.Append(checkmenuitem)
+
 	window.Add(vbox)
+	window.SetSizeRequest(WIDTH, HEIGHT)
 	window.ShowAll()
 	gtk.Main()
-	return mode, doubleThree, endGame
 }
