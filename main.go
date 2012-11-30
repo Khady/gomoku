@@ -25,10 +25,10 @@ func main() {
 	for {
 		game := Gomoku{make([]int, 361), true, true, true, 1, [2]int{10, 10}}
 		mode := game_mode(WINNER)
-		if mode == 2 {
+		fmt.Println("Game's mode is", mode)
+		if mode == 0 {
 			return
 		}
-		fmt.Println("Game's mode is", mode)
 		board_display(game)
 	}
 }

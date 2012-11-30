@@ -171,14 +171,14 @@ func board_display(game Gomoku) {
 }
 
 func game_mode(winner string) int {
+	var mode int
+
 	gtk.Init(&os.Args)
 	window := gtk.Window(gtk.GTK_WINDOW_TOPLEVEL)
 	window.SetTitle("Gomoku")
 	window.Connect("destroy", func() {
 		gtk.MainQuit()
 	})
-
-	var mode int
 
 	vbox := gtk.VBox(true, 0)
 	if len(WINNER) != 0 {
@@ -189,13 +189,12 @@ func game_mode(winner string) int {
 	hbox := gtk.HBox(true, 0)
 	pvp := gtk.ButtonWithLabel("Player Vs Player")
 	pvp.Clicked(func() {
-		mode = 0
+		mode = 1
 		window.Destroy()
 	})
 	pvai := gtk.Label("Player Vs Ai")
 	quit := gtk.ButtonWithLabel("Quit")
 	quit.Clicked(func() {
-		mode = 2
 		window.Destroy()
 	})
 	hbox.Add(pvp)
