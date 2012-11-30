@@ -35,6 +35,10 @@ func draw_square(gc *gdk.GdkGC, pixmap *gdk.GdkPixmap, x, y int) {
 		y*INTER+DEC,
 		x*INTER+INTER+DEC,
 		y*INTER+INTER+DEC)
+	fmt.Println(x, y,x*INTER+DEC,
+		y*INTER+DEC,
+		x*INTER+INTER+DEC,
+		y*INTER+INTER+DEC)
 	gc.SetRgbFgColor(gdk.Color("black"))
 	pixmap.GetDrawable().DrawLine(gc,
 		x*INTER+INTER/2+DEC,
@@ -47,18 +51,20 @@ func draw_square(gc *gdk.GdkGC, pixmap *gdk.GdkPixmap, x, y int) {
 		x*INTER+INTER+DEC,
 		y*INTER+INTER/2+DEC)
 	if x == 0 {
-		clean_side(gc, pixmap, 0, 0, INTER, -1) // LEFT
+		clean_side(gc, pixmap, 0, y*INTER+DEC, INTER, y*INTER+INTER+DEC) // LEFT
 	} else if x == 18 {
-		clean_side(gc, pixmap, HEIGHT-INTER+1, 0, HEIGHT, -1) // RIGHT
+		clean_side(gc, pixmap, HEIGHT-INTER+1, y*INTER+DEC, -1, y*INTER+INTER+DEC) // RIGHT
 	}
 	if y == 0 {
-		clean_side(gc, pixmap, 0, 0, -1, INTER) // TOP
+		clean_side(gc, pixmap, x*INTER+DEC, 0, x*INTER+INTER+DEC, INTER) // TOP
 	} else if y == 18 {
-		clean_side(gc, pixmap, 0, HEIGHT-INTER+1, -1, -1) // BOT
+		clean_side(gc, pixmap, x*INTER+DEC, HEIGHT-INTER+1, x*INTER+INTER+DEC, -1) // BOT
 	}
 }
 
 func display_init_grid(gc *gdk.GdkGC, pixmap *gdk.GdkPixmap) {
+	gc.SetRgbFgColor(gdk.Color("grey"))
+	pixmap.GetDrawable().DrawRectangle(gc, true, 0, 0, -1, -1)
 	for x := 0; x < 19; x++ {
 		for y := 0; y < 19; y++ {
 			draw_square(gc, pixmap, x, y)
@@ -132,10 +138,14 @@ func board_display(game Gomoku) {
 			((y - INTER/2) / INTER) < 0 || ((y - INTER/2) / INTER) >= 19 {
 			return
 		}
-		vic, err := game.Play(((x - INTER/2) / INTER), ((y - INTER/2) / INTER))
-		game.Debug_aff()
+		vic, stones, err := game.Play(((x - INTER/2) / INTER), ((y - INTER/2) / INTER))
+		// game.Debug_aff()
 		if err != nil {
 			return
+		}
+		for _, stone := range stones {
+			fmt.Println("stone", stone)
+			draw_square(gc, pixmap, stone[0], stone[1])
 		}
 		if player == 1 {
 			gc.SetRgbFgColor(gdk.Color("black"))
@@ -170,8 +180,9 @@ func board_display(game Gomoku) {
 	gtk.Main()
 }
 
-func game_mode(winner string) int {
+func game_mode(winner string) (int, bool, bool) {
 	var mode int
+	var doubleThree, endGame bool
 
 	gtk.Init(&os.Args)
 	window := gtk.Window(gtk.GTK_WINDOW_TOPLEVEL)
@@ -186,24 +197,43 @@ func game_mode(winner string) int {
 		vbox.Add(winner)
 		WINNER = ""
 	}
-	hbox := gtk.HBox(true, 0)
+	game_mode := gtk.HBox(true, 0)
 	pvp := gtk.ButtonWithLabel("Player Vs Player")
 	pvp.Clicked(func() {
 		mode = 1
 		window.Destroy()
 	})
 	pvai := gtk.Label("Player Vs Ai")
+	game_mode.Add(pvp)
+	game_mode.Add(pvai)
+	vbox.Add(game_mode)
+	rules := gtk.HBox(true, 0)
+	end := gtk.CheckButtonWithLabel("la prise de fin de partie")
+	end.Connect("toggled", func() {
+		if end.GetActive() {
+			endGame = true
+		} else {
+			endGame = false
+		}
+	})
+	three := gtk.CheckButtonWithLabel("interdiction des doubles-trois")
+	three.Connect("toggled", func() {
+		if three.GetActive() {
+			doubleThree = true
+		} else {
+			doubleThree = false
+		}
+	})
+	rules.Add(end)
+	rules.Add(three)
+	vbox.Add(rules)
 	quit := gtk.ButtonWithLabel("Quit")
 	quit.Clicked(func() {
 		window.Destroy()
 	})
-	hbox.Add(pvp)
-	hbox.Add(pvai)
-	vbox.Add(hbox)
 	vbox.Add(quit)
-	pvp.Show()
 	window.Add(vbox)
 	window.ShowAll()
 	gtk.Main()
-	return mode
+	return mode, doubleThree, endGame
 }

@@ -23,8 +23,8 @@ func main() {
 	// }
 	// game.Debug_aff()
 	for {
-		game := Gomoku{make([]int, 361), true, true, true, 1, [2]int{10, 10}}
-		mode := game_mode(WINNER)
+		mode, doubleThree, endGame := game_mode(WINNER)
+		game := Gomoku{make([]int, 361), true, endGame, doubleThree, 1, [2]int{10, 10}}
 		fmt.Println("Game's mode is", mode)
 		if mode == 0 {
 			return
