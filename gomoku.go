@@ -18,26 +18,31 @@ func (p *Gomoku) verifLine(x, y, count, time, varx, vary int) int {
 	if x+varx >= 0 && y+vary >= 0 && x+varx <= 18 && y+vary <= 18 &&
 		p.board[x+varx+(y+vary)*19] == p.playerTurn && (p.endgameTake == false || p.verifNotTakable(x, y)) {
 		if time == 4 {
+			fmt.Println(x, y, count, ">>")
 			return count + 1
 		} else {
 			return p.verifLine(x+varx, y+vary, count+1, time+1, varx, vary)
 		}
 	}
+	fmt.Println(x, y, count, ">>1")
 	return count
 }
 
 func (p *Gomoku) victory(x, y int) bool {
-	if p.victoryPion(x, y) || p.victoryPion(x + 1, y) || p.victoryPion(x + 2, y) ||
-		p.victoryPion(x, y + 1) || p.victoryPion(x, y + 2) || p.victoryPion(x + 1, y + 1) ||
-		p.victoryPion(x + 2, y + 2) || p.victoryPion(x - 1, y - 1) || p.victoryPion(x + 1, y - 1) ||
-		p.victoryPion(x + 2, y - 2) || p.victoryPion(x - 1, y + 1) || p.victoryPion(x - 2, y + 2) {
+	if p.countTake[p.playerTurn-1] <= 0 || p.victoryPion(x, y) || p.board[x+1+y*19] == p.playerTurn && p.victoryPion(x + 1, y) ||
+		p.victoryPion(x + 2, y) || p.victoryPion(x, y + 1) ||
+		p.victoryPion(x, y + 2) || p.victoryPion(x + 1, y + 1) ||
+		p.victoryPion(x + 2, y + 2) || p.victoryPion(x - 1, y - 1) ||
+		p.victoryPion(x + 1, y - 1) || p.victoryPion(x + 2, y - 2) ||
+		p.victoryPion(x - 1, y + 1) || p.victoryPion(x - 2, y + 2) {
 		return true
 	}
 	return false
 }
 
 func (p *Gomoku) victoryPion(x, y int) bool {
-	if p.countTake[p.playerTurn-1] == 0 || (p.verifLine(x, y, p.verifLine(x, y, 0, 0, -1, 0), 0, 1, 0) >= 5 ||
+	if x >= 0 && y >= 0 && x <= 18 && y <= 18 && p.board[x+y*19] == p.playerTurn &&
+		(p.verifLine(x, y, p.verifLine(x, y, 0, 0, -1, 0), 0, 1, 0) >= 5 ||
 		p.verifLine(x, y, p.verifLine(x, y, 0, 0, 0, 1), 0, 0, -1) >= 5 ||
 		p.verifLine(x, y, p.verifLine(x, y, 0, 0, -1, -1), 0, 1, 1) >= 5 ||
 		p.verifLine(x, y, p.verifLine(x, y, 0, 0, -1, +1), 0, 1, -1) >= 5) && (p.endgameTake == false || p.verifNotTakable(x, y)) {
@@ -163,7 +168,7 @@ func (p *Gomoku) otherPlayer() int {
 }
 
 func (p *Gomoku) verifNotTakable(x, y int) bool {
-	if y <= 18 {
+	if y <= 18 && y >= 0 {
 		if x <= 16 && x >= 1 && p.board[x+1+y*19] == p.playerTurn &&
 			(p.board[x+2+y*19] == 0 || p.board[x-1+y*19] == 0) &&
 			(p.board[x+2+y*19] == p.otherPlayer() || p.board[x-1+y*19] == p.otherPlayer()) {
@@ -175,15 +180,17 @@ func (p *Gomoku) verifNotTakable(x, y int) bool {
 			return false
 		}
 	}
-	if y <= 17 && y >= 2 && p.board[x+(y-1)*19] == p.playerTurn &&
-		(p.board[x+(y-2)*19] == 0 || p.board[x+(y+1)*19] == 0) &&
-		(p.board[x+(y-2)*19] == p.otherPlayer() || p.board[x+(y+1)*19] == p.otherPlayer()) {
-		return false
-	}
-	if y <= 16 && y >= 1 && p.board[x+(y+1)*19] == p.playerTurn &&
-		(p.board[x+(y+2)*19] == p.otherPlayer() || p.board[x+(y-1)*19] == p.otherPlayer()) &&
-		(p.board[x+(y+2)*19] == 0 || p.board[x+(y-1)*19] == 0) {
-		return false
+	if x <= 18 && x >= 0 {
+		if y <= 17 && y >= 2 && p.board[x+(y-1)*19] == p.playerTurn &&
+			(p.board[x+(y-2)*19] == 0 || p.board[x+(y+1)*19] == 0) &&
+			(p.board[x+(y-2)*19] == p.otherPlayer() || p.board[x+(y+1)*19] == p.otherPlayer()) {
+			return false
+		}
+		if y <= 16 && y >= 1 && p.board[x+(y+1)*19] == p.playerTurn &&
+			(p.board[x+(y+2)*19] == p.otherPlayer() || p.board[x+(y-1)*19] == p.otherPlayer()) &&
+			(p.board[x+(y+2)*19] == 0 || p.board[x+(y-1)*19] == 0) {
+			return false
+		}
 	}
 	if y <= 17 && y >= 2 && x >= 2 && x <= 17 && p.board[x-1+(y-1)*19] == p.playerTurn &&
 		(p.board[x-2+(y-2)*19] == 0 || p.board[x+1+(y+1)*19] == 0) &&
@@ -200,7 +207,7 @@ func (p *Gomoku) verifNotTakable(x, y int) bool {
 		(p.board[x+2+(y-2)*19] == p.otherPlayer() || p.board[x-1+(y+1)*19] == p.otherPlayer()) {
 		return false
 	}
-	if y <= 16 && y >= 1 && x <= 16 && y >= 1 && p.board[x+1+(y+1)*19] == p.playerTurn &&
+	if y <= 16 && y >= 1 && x <= 16 && x >= 1 && p.board[x+1+(y+1)*19] == p.playerTurn &&
 		(p.board[x+2+(y+2)*19] == 0 || p.board[x-1+(y-1)*19] == 0) &&
 		(p.board[x+2+(y+2)*19] == p.otherPlayer() || p.board[x-1+(y-1)*19] == p.otherPlayer()) {
 		return false
@@ -214,6 +221,9 @@ func (p *Gomoku) Play(x, y int) (int, error) {
 		p.board[x+y*19] = p.playerTurn
 	} else {
 		return 0, errors.New("move not valid")
+	}
+	if p.victory(x, y) {
+		return p.playerTurn, nil
 	}
 	if p.board[x+y*19] != 0 && (p.doubleThree == true && p.verifDoubleThree(x, y, 0) == true) {
 		p.board[x+y*19] = 0
@@ -236,53 +246,55 @@ func (p *Gomoku) changePlayerTurn() {
 }
 
 func (p *Gomoku) prise(x, y int) {
-	if x <= 15 && p.board[x+1+y*19] != p.playerTurn &&
-		p.board[x+2+y*19] != p.playerTurn && p.board[x+3+y*19] == p.playerTurn {
-		p.board[x+2+y*19] = 0
-		p.board[x+1+y*19] = 0
-		p.countTake[p.playerTurn-1] -= 2
-	}
-	if x >= 3 && p.board[x-1+y*19] != p.playerTurn &&
-		p.board[x-2+y*19] != p.playerTurn && p.board[x-3+y*19] == p.playerTurn {
-		p.board[x-2+y*19] = 0
+	if x <= 18 && y <= 18 && x >= 0 && y >= 0 {
+		if x <= 15 && p.board[x+1+y*19] == p.otherPlayer() &&
+			p.board[x+2+y*19] == p.otherPlayer() && p.board[x+3+y*19] == p.playerTurn {
+			p.board[x+2+y*19] = 0
+			p.board[x+1+y*19] = 0
+			p.countTake[p.playerTurn-1] -= 2
+		}
+		if x >= 3 && p.board[x-1+y*19] == p.otherPlayer() &&
+			p.board[x-2+y*19] == p.otherPlayer() && p.board[x-3+y*19] == p.playerTurn {
+			p.board[x-2+y*19] = 0
 		p.board[x-1+y*19] = 0
-		p.countTake[p.playerTurn-1] -= 2
-	}
-	if y >= 3 && p.board[x+(y-1)*19] != p.playerTurn &&
-		p.board[x+(y-2)*19] != p.playerTurn && p.board[x+(y-3)*19] == p.playerTurn {
-		p.board[x+(y-1)*19] = 0
-		p.board[x+(y-2)*19] = 0
-		p.countTake[p.playerTurn-1] -= 2
-	}
-	if y <= 15 && p.board[x+(y+1)*19] != p.playerTurn &&
-		p.board[x+(y+2)*19] != p.playerTurn && p.board[x+(y+3)*19] == p.playerTurn {
-		p.board[x+(y+1)*19] = 0
-		p.board[x+(y+2)*19] = 0
-		p.countTake[p.playerTurn-1] -= 2
-	}
-	if y >= 3 && x >= 3 && p.board[x-1+(y-1)*19] != p.playerTurn &&
-		p.board[x-2+(y-2)*19] != p.playerTurn && p.board[x-3+(y-3)*19] == p.playerTurn {
-		p.board[x-1+(y-1)*19] = 0
-		p.board[x-2+(y-2)*19] = 0
-		p.countTake[p.playerTurn-1] -= 2
-	}
-	if y <= 15 && x >= 3 && p.board[x-1+(y+1)*19] != p.playerTurn &&
-		p.board[x-2+(y+2)*19] != p.playerTurn && p.board[x-3+(y+3)*19] == p.playerTurn {
-		p.board[x-1+(y+1)*19] = 0
-		p.board[x-2+(y+2)*19] = 0
-		p.countTake[p.playerTurn-1] -= 2
-	}
-	if y >= 3 && x <= 15 && p.board[x+1+(y-1)*19] != p.playerTurn &&
-		p.board[x+2+(y-2)*19] != p.playerTurn && p.board[x+3+(y-3)*19] == p.playerTurn {
-		p.board[x+1+(y-1)*19] = 0
-		p.board[x+2+(y-2)*19] = 0
-		p.countTake[p.playerTurn-1] -= 2
-	}
-	if y <= 15 && x <= 15 && p.board[x+1+(y+1)*19] != p.playerTurn &&
-		p.board[x+2+(y+2)*19] != p.playerTurn && p.board[x+3+(y+3)*19] == p.playerTurn {
-		p.board[x+1+(y+1)*19] = 0
-		p.board[x+2+(y+2)*19] = 0
-		p.countTake[p.playerTurn-1] -= 2
+			p.countTake[p.playerTurn-1] -= 2
+		}
+		if y >= 3 && p.board[x+(y-1)*19] == p.otherPlayer() &&
+			p.board[x+(y-2)*19] == p.otherPlayer() && p.board[x+(y-3)*19] == p.playerTurn {
+			p.board[x+(y-1)*19] = 0
+			p.board[x+(y-2)*19] = 0
+			p.countTake[p.playerTurn-1] -= 2
+		}
+		if y <= 15 && p.board[x+(y+1)*19] == p.otherPlayer() &&
+			p.board[x+(y+2)*19] == p.otherPlayer() && p.board[x+(y+3)*19] == p.playerTurn {
+			p.board[x+(y+1)*19] = 0
+			p.board[x+(y+2)*19] = 0
+			p.countTake[p.playerTurn-1] -= 2
+		}
+		if y >= 3 && x >= 3 && p.board[x-1+(y-1)*19] == p.otherPlayer() &&
+			p.board[x-2+(y-2)*19] == p.otherPlayer() && p.board[x-3+(y-3)*19] == p.playerTurn {
+			p.board[x-1+(y-1)*19] = 0
+			p.board[x-2+(y-2)*19] = 0
+			p.countTake[p.playerTurn-1] -= 2
+		}
+		if y <= 15 && x >= 3 && p.board[x-1+(y+1)*19] == p.otherPlayer() &&
+			p.board[x-2+(y+2)*19] == p.otherPlayer() && p.board[x-3+(y+3)*19] == p.playerTurn {
+			p.board[x-1+(y+1)*19] = 0
+			p.board[x-2+(y+2)*19] = 0
+			p.countTake[p.playerTurn-1] -= 2
+		}
+		if y >= 3 && x <= 15 && p.board[x+1+(y-1)*19] == p.otherPlayer() &&
+			p.board[x+2+(y-2)*19] == p.otherPlayer() && p.board[x+3+(y-3)*19] == p.playerTurn {
+			p.board[x+1+(y-1)*19] = 0
+			p.board[x+2+(y-2)*19] = 0
+			p.countTake[p.playerTurn-1] -= 2
+		}
+		if y <= 15 && x <= 15 && p.board[x+1+(y+1)*19] == p.otherPlayer() &&
+			p.board[x+2+(y+2)*19] == p.otherPlayer() && p.board[x+3+(y+3)*19] == p.playerTurn {
+			p.board[x+1+(y+1)*19] = 0
+			p.board[x+2+(y+2)*19] = 0
+			p.countTake[p.playerTurn-1] -= 2
+		}
 	}
 }
 
