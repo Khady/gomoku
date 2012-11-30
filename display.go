@@ -35,6 +35,10 @@ func draw_square(gc *gdk.GdkGC, pixmap *gdk.GdkPixmap, x, y int) {
 		y*INTER+DEC,
 		x*INTER+INTER+DEC,
 		y*INTER+INTER+DEC)
+	fmt.Println(x*INTER+DEC,
+		y*INTER+DEC,
+		x*INTER+INTER+DEC,
+		y*INTER+INTER+DEC)
 	gc.SetRgbFgColor(gdk.Color("black"))
 	pixmap.GetDrawable().DrawLine(gc,
 		x*INTER+INTER/2+DEC,
@@ -63,7 +67,7 @@ func draw_square(gc *gdk.GdkGC, pixmap *gdk.GdkPixmap, x, y int) {
 }
 
 func display_init_grid(gc *gdk.GdkGC, pixmap *gdk.GdkPixmap) {
-	gc.SetRgbFgColor(gdk.Color("grey"))
+	gc.SetRgbFgColor(gdk.Color("blue"))
 	pixmap.GetDrawable().DrawRectangle(gc, true, 0, 0, -1, -1)
 	for x := 0; x < 19; x++ {
 		for y := 0; y < 19; y++ {
@@ -160,7 +164,7 @@ func board_display() {
 		statusbar.Push(context_id, fmt.Sprintf("Last move is Player %d : %d/%d", player, ((x - INTER/2) / INTER) + 1, ((y - INTER/2) / INTER) + 1))
 		for _, stone := range stones {
 			fmt.Println("stone", stone)
-			draw_square(gc, pixmap, stone[0], stone[1])
+			draw_square(gc, pixmap, 1, 1)
 		}
 		if player == 1 {
 			gc.SetRgbFgColor(gdk.Color("black"))
@@ -253,7 +257,7 @@ func board_display() {
 	vbox.PackStart(statusbar, false, false, 0)
 
 	window.Add(vbox)
-	window.SetSizeRequest(WIDTH, HEIGHT)
+	window.SetSizeRequest(WIDTH, HEIGHT + 20)
 	window.ShowAll()
 	gtk.Main()
 }
