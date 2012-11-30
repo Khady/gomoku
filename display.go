@@ -29,11 +29,12 @@ func clean_side(gc *gdk.GdkGC, pixmap *gdk.GdkPixmap, x1, y1, x2, y2 int) {
 }
 
 func draw_square(gc *gdk.GdkGC, pixmap *gdk.GdkPixmap, x, y int) {
+	gc.SetRgbFgColor(gdk.Color("grey"))
 	pixmap.GetDrawable().DrawRectangle(gc, true,
 		x*INTER+DEC,
 		y*INTER+DEC,
-		(x+1)*INTER+DEC,
-		(y+1)*INTER+DEC)
+		40,
+		40)
 	gc.SetRgbFgColor(gdk.Color("black"))
 	pixmap.GetDrawable().DrawLine(gc,
 		x*INTER+INTER/2+DEC,
@@ -46,14 +47,14 @@ func draw_square(gc *gdk.GdkGC, pixmap *gdk.GdkPixmap, x, y int) {
 		x*INTER+INTER+DEC,
 		y*INTER+INTER/2+DEC)
 	if x == 0 {
-		clean_side(gc, pixmap, 0, y*INTER+DEC, INTER, y*INTER+INTER+DEC) // LEFT
+		clean_side(gc, pixmap, 0, y*INTER+DEC, INTER, INTER) // LEFT
 	} else if x == 18 {
-		clean_side(gc, pixmap, HEIGHT-INTER+1, y*INTER+DEC, -1, y*INTER+INTER+DEC) // RIGHT
+		clean_side(gc, pixmap, HEIGHT-INTER+1, y*INTER+DEC, -1, INTER) // RIGHT
 	}
 	if y == 0 {
 		clean_side(gc, pixmap, x*INTER+DEC, 0, x*INTER+INTER+DEC, INTER) // TOP
 	} else if y == 18 {
-		clean_side(gc, pixmap, x*INTER+DEC, HEIGHT-INTER+1, x*INTER+INTER+DEC, -1) // BOT
+		clean_side(gc, pixmap, x*INTER+DEC, HEIGHT-INTER+1, INTER, -1) // BOT
 	}
 }
 
