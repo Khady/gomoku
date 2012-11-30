@@ -17,7 +17,7 @@ type Gomoku struct {
 func (p *Gomoku) verifLine(x, y, count, time, varx, vary int) int {
 	if x+varx >= 0 && y+vary >= 0 && x+varx <= 18 && y+vary <= 18 &&
 		p.board[x+varx+(y+vary)*19] == p.playerTurn && (p.endgameTake == false || p.verifNotTakable(x, y)) {
-		if time == 4 {
+		if time >= 4 {
 			fmt.Println(x, y, count, ">>")
 			return count + 1
 		} else {
@@ -42,10 +42,10 @@ func (p *Gomoku) victory(x, y int) bool {
 
 func (p *Gomoku) victoryPion(x, y int) bool {
 	if x >= 0 && y >= 0 && x <= 18 && y <= 18 && p.board[x+y*19] == p.playerTurn &&
-		(p.verifLine(x, y, p.verifLine(x, y, 0, 0, -1, 0), 0, 1, 0) >= 5 ||
-		p.verifLine(x, y, p.verifLine(x, y, 0, 0, 0, 1), 0, 0, -1) >= 5 ||
-		p.verifLine(x, y, p.verifLine(x, y, 0, 0, -1, -1), 0, 1, 1) >= 5 ||
-		p.verifLine(x, y, p.verifLine(x, y, 0, 0, -1, +1), 0, 1, -1) >= 5) && (p.endgameTake == false || p.verifNotTakable(x, y)) {
+		(p.verifLine(x, y, p.verifLine(x, y, 0, 0, -1, 0), 0, 1, 0) >= 4 ||
+		p.verifLine(x, y, p.verifLine(x, y, 0, 0, 0, 1), 0, 0, -1) >= 4 ||
+		p.verifLine(x, y, p.verifLine(x, y, 0, 0, -1, -1), 0, 1, 1) >= 4 ||
+		p.verifLine(x, y, p.verifLine(x, y, 0, 0, -1, +1), 0, 1, -1) >= 4) && (p.endgameTake == false || p.verifNotTakable(x, y)) {
 		return true
 	}
 	return false
@@ -216,7 +216,6 @@ func (p *Gomoku) verifNotTakable(x, y int) bool {
 }
 
 func (p *Gomoku) Play(x, y int) (int, [][2]int, error) {
-
 	if p.board[x+y*19] == 0 {
 		p.board[x+y*19] = p.playerTurn
 	} else {
