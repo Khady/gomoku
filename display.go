@@ -214,6 +214,11 @@ func board_display() {
 		} else {
 			doubleThree = false
 		}
+		game = Gomoku{make([]int, 361), true, endGame, doubleThree, 1, [2]int{10, 10}}
+		player = 1
+		display_init_grid(gc, pixmap)
+		drawingarea.Hide()
+		drawingarea.Show()
 	})
 	submenu.Append(checkmenuitem)
 
@@ -224,6 +229,11 @@ func board_display() {
 		} else {
 			endGame = false
 		}
+		game = Gomoku{make([]int, 361), true, endGame, doubleThree, 1, [2]int{10, 10}}
+		player = 1
+		display_init_grid(gc, pixmap)
+		drawingarea.Hide()
+		drawingarea.Show()
 	})
 	submenu.Append(checkmenuitem)
 
