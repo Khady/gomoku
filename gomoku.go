@@ -16,20 +16,18 @@ type Gomoku struct {
 
 func (p *Gomoku) verifLine(x, y, count, time, varx, vary int) int {
 	if x+varx >= 0 && y+vary >= 0 && x+varx <= 18 && y+vary <= 18 &&
-		p.board[x+varx+(y+vary)*19] == p.playerTurn && (p.endgameTake == false || p.verifNotTakable(x, y)) {
+		p.board[x+varx+(y+vary)*19] == p.playerTurn && (p.endgameTake == false || p.verifNotTakable(x+varx, y+vary)) {
 		if time >= 4 {
-			fmt.Println(x, y, count, ">>")
 			return count + 1
 		} else {
 			return p.verifLine(x+varx, y+vary, count+1, time+1, varx, vary)
 		}
 	}
-	fmt.Println(x, y, count, ">>1")
 	return count
 }
 
 func (p *Gomoku) victory(x, y int) bool {
-	if p.countTake[p.playerTurn-1] <= 0 || p.victoryPion(x, y) || p.board[x+1+y*19] == p.playerTurn && p.victoryPion(x + 1, y) ||
+	if p.countTake[p.playerTurn-1] <= 0 || p.victoryPion(x, y) || x < 18 && p.victoryPion(x + 1, y) ||
 		p.victoryPion(x + 2, y) || p.victoryPion(x, y + 1) ||
 		p.victoryPion(x, y + 2) || p.victoryPion(x + 1, y + 1) ||
 		p.victoryPion(x + 2, y + 2) || p.victoryPion(x - 1, y - 1) ||
@@ -42,6 +40,7 @@ func (p *Gomoku) victory(x, y int) bool {
 
 func (p *Gomoku) victoryPion(x, y int) bool {
 	if x >= 0 && y >= 0 && x <= 18 && y <= 18 && p.board[x+y*19] == p.playerTurn &&
+		(p.endgameTake == false || p.verifNotTakable(x, y)) &&
 		(p.verifLine(x, y, p.verifLine(x, y, 0, 0, -1, 0), 0, 1, 0) >= 4 ||
 		p.verifLine(x, y, p.verifLine(x, y, 0, 0, 0, 1), 0, 0, -1) >= 4 ||
 		p.verifLine(x, y, p.verifLine(x, y, 0, 0, -1, -1), 0, 1, 1) >= 4 ||
@@ -316,25 +315,3 @@ func (p *Gomoku) Debug_aff() {
 	}
 	fmt.Println(p.countTake[0], p.countTake[1])
 }
-
-// func main() {
-// 	game := Gomoku{make([]int, 361), true, true, true, 1, [2]int{10, 10}};
-// 	game.play(1, 0)
-// 	game.play(2, 0)
-// 	game.play(1, 1)
-// 	game.play(6, 2)
-// 	game.play(1, 2)
-// 	game.play(5, 0)
-// 	game.play(1, 3)
-// 	game.play(7, 0)
-// 	game.play(2, 2)
-// 	game.play(8, 0)
-// 	if (vic := game.play(1, 4)) != 0 {
-// 		fmt.Println("player ",  vic, "win")
-// 	}
-// 	game.play(9, 0)
-// 	if game.play(12, 5) != 0 {
-// 		fmt.Println("win")
-// 	}
-// 	game.debug_aff()
-// }
