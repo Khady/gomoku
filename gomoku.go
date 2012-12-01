@@ -144,7 +144,7 @@ func (p *Gomoku) verifDoubleThree(x, y, prof int) bool {
 	verif8 = p.verifThree(x, y, prof, 1, 1, -2, -2)
 	verif9 = p.verifThree(x, y, prof, 2, 2, -1, -1)
 	if verif1 == 2 || verif2 == 2 || verif3 == 2 || verif4 == 2 || verif5 == 2 || verif6 == 2 ||
-		verif7 == 2 || verif8 == 1 || verif9 == 2 {
+		verif7 == 2 || verif8 == 2 || verif9 == 2 {
 		return true
 	} else if verif1 == 1 || verif2 == 1 || verif3 == 1 || verif4 == 1 || verif5 == 1 || verif6 == 1 ||
 		verif7 == 1 || verif8 == 1 || verif9 == 1 {
@@ -163,7 +163,7 @@ func (p *Gomoku) verifDoubleThree(x, y, prof int) bool {
 	verif8 = p.verifThree(x, y, prof, 1, -1, -2, 2)
 	verif9 = p.verifThree(x, y, prof, 2, -2, -1, 1)
 	if verif1 == 2 || verif2 == 2 || verif3 == 2 || verif4 == 2 || verif5 == 2 || verif6 == 2 ||
-		verif7 == 2 || verif8 == 1 || verif9 == 2 {
+		verif7 == 2 || verif8 == 2 || verif9 == 2 {
 		return true
 	} else if verif1 == 1 || verif2 == 1 || verif3 == 1 || verif4 == 1 || verif5 == 1 || verif6 == 1 ||
 		verif7 == 1 || verif8 == 1 || verif9 == 1 {
