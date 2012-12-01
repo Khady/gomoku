@@ -154,7 +154,8 @@ func board_display() {
 		if err != nil {
 			return
 		}
-		statusbar.Push(context_id, fmt.Sprintf("Last move is Player %d : %d/%d", player, ((x-INTER/2)/INTER)+1, ((y-INTER/2)/INTER)+1))
+		statusbar.Push(context_id, fmt.Sprintf("[Player 1/2 : %d/%d stone before death] Last move is Player %d : %d/%d",
+			game.countTake[1], game.countTake[0], player, ((x-INTER/2)/INTER)+1, ((y-INTER/2)/INTER)+1))
 		for _, stone := range stones {
 			draw_square(gc, pixmap, stone[0], stone[1])
 		}
@@ -186,7 +187,7 @@ func board_display() {
 	drawingarea.SetEvents(int(gdk.GDK_POINTER_MOTION_MASK | gdk.GDK_POINTER_MOTION_HINT_MASK | gdk.GDK_BUTTON_PRESS_MASK))
 	vbox.Add(drawingarea)
 
-	cascademenu := gtk.MenuItemWithMnemonic("_File")
+	cascademenu := gtk.MenuItemWithMnemonic("_Game")
 	menubar.Append(cascademenu)
 	submenu := gtk.Menu()
 	cascademenu.SetSubmenu(submenu)
@@ -209,12 +210,12 @@ func board_display() {
 	})
 	submenu.Append(menuitem)
 
-	cascademenu = gtk.MenuItemWithMnemonic("_Options")
+	cascademenu = gtk.MenuItemWithMnemonic("_Rules")
 	menubar.Append(cascademenu)
 	submenu = gtk.Menu()
 	cascademenu.SetSubmenu(submenu)
 
-	checkmenuitem := gtk.CheckMenuItemWithMnemonic("_Double trois")
+	checkmenuitem := gtk.CheckMenuItemWithMnemonic("_Three and three")
 	checkmenuitem.Connect("activate", func() {
 		if doubleThree == false {
 			doubleThree = true
@@ -230,7 +231,7 @@ func board_display() {
 	})
 	submenu.Append(checkmenuitem)
 
-	checkmenuitem = gtk.CheckMenuItemWithMnemonic("P_rise de fin de partie")
+	checkmenuitem = gtk.CheckMenuItemWithMnemonic("_Unbreakable end")
 	checkmenuitem.Connect("activate", func() {
 		if endGame == false {
 			endGame = true

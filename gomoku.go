@@ -245,7 +245,7 @@ func (p *Gomoku) Play(x, y int) (int, [][2]int, error) {
 	}
 	stones := p.prise(x, y)
 	if p.victory(x, y) {
-		return p.playerTurn, nil, nil
+		return p.playerTurn, stones, nil
 	}
 	p.changePlayerTurn()
 	return 0, stones, nil
