@@ -94,10 +94,7 @@ func board_display() {
 	window.SetPosition(gtk.GTK_WIN_POS_CENTER)
 	window.SetTitle("Gomoku")
 	window.SetResizable(false)
-	window.Connect("destroy", func() {
-		println("got destroy!")
-		gtk.MainQuit()
-	})
+	window.Connect("destroy", gtk.MainQuit)
 
 	var game Gomoku
 	var endGame, doubleThree, stop bool
@@ -195,7 +192,6 @@ func board_display() {
 	menuitem.Connect("activate", func() {
 		gc.SetRgbFgColor(gdk.Color("grey"))
 		pixmap.GetDrawable().DrawRectangle(gc, true, 0, 0, -1, -1)
-		fmt.Println(endGame, doubleThree)
 		game = Gomoku{make([]int, 361), true, endGame, doubleThree, 1, [2]int{10, 10}}
 		player = 1
 		display_init_grid(gc, pixmap)

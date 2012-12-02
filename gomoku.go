@@ -16,7 +16,8 @@ type Gomoku struct {
 
 func (p *Gomoku) verifLine(x, y, count, time, varx, vary int) int {
 	if x+varx >= 0 && y+vary >= 0 && x+varx <= 18 && y+vary <= 18 &&
-		p.board[x+varx+(y+vary)*19] == p.playerTurn && (p.endgameTake == false || p.verifNotTakable(x+varx, y+vary)) {
+		p.board[x+varx+(y+vary)*19] == p.playerTurn &&
+		(p.endgameTake == false || p.verifNotTakable(x+varx, y+vary)) {
 		if time >= 4 {
 			return count + 1
 		} else {
@@ -27,12 +28,11 @@ func (p *Gomoku) verifLine(x, y, count, time, varx, vary int) int {
 }
 
 func (p *Gomoku) victory(x, y int) bool {
-	if p.countTake[p.playerTurn-1] <= 0 || p.victoryPion(x, y) || x < 18 && p.victoryPion(x + 1, y) ||
-		p.victoryPion(x + 2, y) || p.victoryPion(x, y + 1) ||
-		p.victoryPion(x, y + 2) || p.victoryPion(x + 1, y + 1) ||
-		p.victoryPion(x + 2, y + 2) || p.victoryPion(x - 1, y - 1) ||
-		p.victoryPion(x + 1, y - 1) || p.victoryPion(x + 2, y - 2) ||
-		p.victoryPion(x - 1, y + 1) || p.victoryPion(x - 2, y + 2) {
+	if p.countTake[p.playerTurn-1] <= 0 || p.victoryPion(x, y) || x < 18 && p.victoryPion(x+1, y) ||
+		p.victoryPion(x+2, y) || p.victoryPion(x, y+1) || p.victoryPion(x, y+2) ||
+		p.victoryPion(x+1, y+1) || p.victoryPion(x+2, y+2) || p.victoryPion(x-1, y-1) ||
+		p.victoryPion(x-2, y-2) || p.victoryPion(x+1, y-1) || p.victoryPion(x+2, y-2) ||
+		p.victoryPion(x-1, y+1) || p.victoryPion(x-2, y+2) {
 		return true
 	}
 	return false
@@ -44,7 +44,8 @@ func (p *Gomoku) victoryPion(x, y int) bool {
 		(p.verifLine(x, y, p.verifLine(x, y, 0, 0, -1, 0), 0, 1, 0) >= 4 ||
 			p.verifLine(x, y, p.verifLine(x, y, 0, 0, 0, 1), 0, 0, -1) >= 4 ||
 			p.verifLine(x, y, p.verifLine(x, y, 0, 0, -1, -1), 0, 1, 1) >= 4 ||
-			p.verifLine(x, y, p.verifLine(x, y, 0, 0, -1, +1), 0, 1, -1) >= 4) && (p.endgameTake == false || p.verifNotTakable(x, y)) {
+			p.verifLine(x, y, p.verifLine(x, y, 0, 0, -1, +1), 0, 1, -1) >= 4) &&
+		(p.endgameTake == false || p.verifNotTakable(x, y)) {
 		return true
 	}
 	return false
@@ -86,9 +87,11 @@ func (p *Gomoku) verifEnemy(x, y, varx, vary, flag int) bool {
 }
 
 func (p *Gomoku) verifThree(x, y, prof, varx1, vary1, varx2, vary2 int) int {
-	if x > 0 && y > 0 && x < 18 && y < 18 && x > 0-Min(varx1, varx2) && x < 18-Max(varx1, varx2) && y > 0-Min(vary1, vary2) && y < 18-Max(vary1, vary2) &&
+	if x > 0 && y > 0 && x < 18 && y < 18 && x > 0-Min(varx1, varx2) &&
+		x < 18-Max(varx1, varx2) && y > 0-Min(vary1, vary2) && y < 18-Max(vary1, vary2) &&
 		p.board[x+varx1+(y+vary1)*19] == p.playerTurn && p.board[x+varx2+(y+vary2)*19] == p.playerTurn &&
-		p.verifEnemy(x, y, varx1, vary1, 1) && p.verifEnemy(x, y, varx2, vary2, 1) && p.verifEnemy(x, y, varx1, vary1, 0) && p.verifEnemy(x, y, varx2, vary2, 0) {
+		p.verifEnemy(x, y, varx1, vary1, 1) && p.verifEnemy(x, y, varx2, vary2, 1) &&
+		p.verifEnemy(x, y, varx1, vary1, 0) && p.verifEnemy(x, y, varx2, vary2, 0) {
 		if prof == 0 && (p.verifDoubleThree(x+varx1, y+vary1, 1) || p.verifDoubleThree(x+varx2, y+vary2, 1)) {
 			return 2
 		}
@@ -202,8 +205,8 @@ func (p *Gomoku) verifNotTakable(x, y int) bool {
 			return false
 		}
 		if y <= 16 && y >= 1 && p.board[x+(y+1)*19] == p.playerTurn &&
-			(p.board[x+(y+2)*19] == p.otherPlayer() || p.board[x+(y-1)*19] == p.otherPlayer()) &&
-			(p.board[x+(y+2)*19] == 0 || p.board[x+(y-1)*19] == 0) {
+			(p.board[x+(y+2)*19] == 0 || p.board[x+(y-1)*19] == 0) &&
+			(p.board[x+(y+2)*19] == p.otherPlayer() || p.board[x+(y-1)*19] == p.otherPlayer()) {
 			return false
 		}
 	}
@@ -331,3 +334,5 @@ func (p *Gomoku) Debug_aff() {
 	}
 	fmt.Println(p.countTake[0], p.countTake[1])
 }
+
+/* dali */
