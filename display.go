@@ -19,8 +19,8 @@ var (
 	WINNER string
 )
 
-func clean_side(gc *gdk.GdkGC, pixmap *gdk.GdkPixmap, x1, y1, x2, y2 int) {
-	gc.SetRgbFgColor(gdk.Color("grey"))
+func clean_side(gc *gdk.GC, pixmap *gdk.Pixmap, x1, y1, x2, y2 int) {
+	gc.SetRgbFgColor(gdk.NewColor("grey"))
 	pixmap.GetDrawable().DrawRectangle(gc, true,
 		x1,
 		y1,
@@ -28,14 +28,14 @@ func clean_side(gc *gdk.GdkGC, pixmap *gdk.GdkPixmap, x1, y1, x2, y2 int) {
 		y2)
 }
 
-func draw_square(gc *gdk.GdkGC, pixmap *gdk.GdkPixmap, x, y int) {
-	gc.SetRgbFgColor(gdk.Color("grey"))
+func draw_square(gc *gdk.GC, pixmap *gdk.Pixmap, x, y int) {
+	gc.SetRgbFgColor(gdk.NewColor("grey"))
 	pixmap.GetDrawable().DrawRectangle(gc, true,
 		x*INTER+DEC,
 		y*INTER+DEC,
 		40,
 		40)
-	gc.SetRgbFgColor(gdk.Color("black"))
+	gc.SetRgbFgColor(gdk.NewColor("black"))
 	pixmap.GetDrawable().DrawLine(gc,
 		x*INTER+INTER/2+DEC,
 		y*INTER+DEC,
@@ -58,16 +58,16 @@ func draw_square(gc *gdk.GdkGC, pixmap *gdk.GdkPixmap, x, y int) {
 	}
 }
 
-func display_init_grid(gc *gdk.GdkGC, pixmap *gdk.GdkPixmap) {
-	gc.SetRgbFgColor(gdk.Color("grey"))
+func display_init_grid(gc *gdk.GC, pixmap *gdk.Pixmap) {
+	gc.SetRgbFgColor(gdk.NewColor("grey"))
 	pixmap.GetDrawable().DrawRectangle(gc, true, 0, 0, -1, -1)
 	for x := 0; x < 19; x++ {
 		for y := 0; y < 19; y++ {
-			gc.SetRgbFgColor(gdk.Color("grey"))
+			gc.SetRgbFgColor(gdk.NewColor("grey"))
 			draw_square(gc, pixmap, x, y)
 		}
 	}
-	gc.SetRgbFgColor(gdk.Color("black"))
+	gc.SetRgbFgColor(gdk.NewColor("black"))
 	pixmap.GetDrawable().DrawArc(gc, true, (4*INTER)-(CIRCLE/2), (4*INTER)-(CIRCLE/2),
 		CIRCLE, CIRCLE, 0, 64*360)
 	pixmap.GetDrawable().DrawArc(gc, true, (10*INTER)-(CIRCLE/2), (4*INTER)-(CIRCLE/2),
@@ -90,40 +90,40 @@ func display_init_grid(gc *gdk.GdkGC, pixmap *gdk.GdkPixmap) {
 
 func board_display() {
 	gtk.Init(&os.Args)
-	window := gtk.Window(gtk.GTK_WINDOW_TOPLEVEL)
-	window.SetPosition(gtk.GTK_WIN_POS_CENTER)
+	window := gtk.NewWindow(gtk.WINDOW_TOPLEVEL)
+	window.SetPosition(gtk.WIN_POS_CENTER)
 	window.SetTitle("Gomoku")
 	window.SetResizable(false)
 	window.Connect("destroy", gtk.MainQuit)
 
 	var game Gomoku
 	var endGame, doubleThree, stop bool
-	var menuitem *gtk.GtkMenuItem
-	var gdkwin *gdk.GdkWindow
-	var pixmap *gdk.GdkPixmap
-	var gc *gdk.GdkGC
+	var menuitem *gtk.MenuItem
+	var gdkwin *gdk.Window
+	var pixmap *gdk.Pixmap
+	var gc *gdk.GC
 	var player int
 	player = 1
 	game = Gomoku{make([]int, 361), true, endGame, doubleThree, 1, [2]int{10, 10}}
 
-	vbox := gtk.VBox(false, 1)
+	vbox := gtk.NewVBox(false, 1)
 
-	menubar := gtk.MenuBar()
+	menubar := gtk.NewMenuBar()
 	vbox.PackStart(menubar, false, false, 0)
-	statusbar := gtk.Statusbar()
+	statusbar := gtk.NewStatusbar()
 	context_id := statusbar.GetContextId("go-gtk")
 	statusbar.Push(context_id, "(not so) Proudly propulsed by the inglorious Gomoku Project, with love, and Golang!")
 
-	drawingarea := gtk.DrawingArea()
+	drawingarea := gtk.NewDrawingArea()
 
 	drawingarea.Connect("configure-event", func() {
 		if pixmap != nil {
 			pixmap.Unref()
 		}
-		var allocation gtk.GtkAllocation
+		var allocation gtk.Allocation
 		drawingarea.GetAllocation(&allocation)
-		pixmap = gdk.Pixmap(drawingarea.GetWindow().GetDrawable(), allocation.Width, allocation.Height, 24)
-		gc = gdk.GC(pixmap.GetDrawable())
+		pixmap = gdk.NewPixmap(drawingarea.GetWindow().GetDrawable(), allocation.Width, allocation.Height, 24)
+		gc = gdk.NewGC(pixmap.GetDrawable())
 		display_init_grid(gc, pixmap)
 	})
 
@@ -136,7 +136,7 @@ func board_display() {
 		}
 		arg := ctx.Args(0)
 		mev := *(**gdk.EventMotion)(unsafe.Pointer(&arg))
-		var mt gdk.GdkModifierType
+		var mt gdk.ModifierType
 		var x, y int
 		if mev.IsHint != 0 {
 			gdkwin.GetPointer(&x, &y, &mt)
@@ -147,6 +147,7 @@ func board_display() {
 			((y-INTER/2)/INTER) < 0 || ((y-INTER/2)/INTER) >= 19 {
 			return
 		}
+		fmt.Println("-------------------------------------------------------")
 		vic, stones, err := game.Play(((x - INTER/2) / INTER), ((y - INTER/2) / INTER))
 		if err != nil {
 			return
@@ -157,10 +158,10 @@ func board_display() {
 			draw_square(gc, pixmap, stone[0], stone[1])
 		}
 		if player == 1 {
-			gc.SetRgbFgColor(gdk.Color("black"))
+			gc.SetRgbFgColor(gdk.NewColor("black"))
 			player = 2
 		} else {
-			gc.SetRgbFgColor(gdk.Color("white"))
+			gc.SetRgbFgColor(gdk.NewColor("white"))
 			player = 1
 		}
 		x = ((x-INTER/2)/INTER)*INTER + INTER
@@ -181,16 +182,16 @@ func board_display() {
 		}
 	})
 
-	drawingarea.SetEvents(int(gdk.GDK_POINTER_MOTION_MASK | gdk.GDK_POINTER_MOTION_HINT_MASK | gdk.GDK_BUTTON_PRESS_MASK))
+	drawingarea.SetEvents(int(gdk.POINTER_MOTION_MASK | gdk.POINTER_MOTION_HINT_MASK | gdk.BUTTON_PRESS_MASK))
 	vbox.Add(drawingarea)
 
-	cascademenu := gtk.MenuItemWithMnemonic("_Game")
+	cascademenu := gtk.NewMenuItemWithMnemonic("_Game")
 	menubar.Append(cascademenu)
-	submenu := gtk.Menu()
+	submenu := gtk.NewMenu()
 	cascademenu.SetSubmenu(submenu)
-	menuitem = gtk.MenuItemWithMnemonic("_Player Vs Player")
+	menuitem = gtk.NewMenuItemWithMnemonic("_Player Vs Player")
 	menuitem.Connect("activate", func() {
-		gc.SetRgbFgColor(gdk.Color("grey"))
+		gc.SetRgbFgColor(gdk.NewColor("grey"))
 		pixmap.GetDrawable().DrawRectangle(gc, true, 0, 0, -1, -1)
 		game = Gomoku{make([]int, 361), true, endGame, doubleThree, 1, [2]int{10, 10}}
 		player = 1
@@ -200,18 +201,18 @@ func board_display() {
 		stop = false
 	})
 	submenu.Append(menuitem)
-	menuitem = gtk.MenuItemWithMnemonic("E_xit")
+	menuitem = gtk.NewMenuItemWithMnemonic("E_xit")
 	menuitem.Connect("activate", func() {
 		gtk.MainQuit()
 	})
 	submenu.Append(menuitem)
 
-	cascademenu = gtk.MenuItemWithMnemonic("_Rules")
+	cascademenu = gtk.NewMenuItemWithMnemonic("_Rules")
 	menubar.Append(cascademenu)
-	submenu = gtk.Menu()
+	submenu = gtk.NewMenu()
 	cascademenu.SetSubmenu(submenu)
 
-	checkmenuitem := gtk.CheckMenuItemWithMnemonic("_Three and three")
+	checkmenuitem := gtk.NewCheckMenuItemWithMnemonic("_Three and three")
 	checkmenuitem.Connect("activate", func() {
 		if doubleThree == false {
 			doubleThree = true
@@ -227,7 +228,7 @@ func board_display() {
 	})
 	submenu.Append(checkmenuitem)
 
-	checkmenuitem = gtk.CheckMenuItemWithMnemonic("_Unbreakable end")
+	checkmenuitem = gtk.NewCheckMenuItemWithMnemonic("_Unbreakable end")
 	checkmenuitem.Connect("activate", func() {
 		if endGame == false {
 			endGame = true
