@@ -177,8 +177,15 @@ func board_display() {
 		}
 		statusbar.Push(context_id, fmt.Sprintf("[Player 1/2 : %d/%d stone before death] Last move is Player %d : %d/%d",
 			game.countTake[1], game.countTake[0], player, ((x-INTER/2)/INTER)+1, ((y-INTER/2)/INTER)+1))
-		for _, stone := range stones {
+		for ind, stone := range stones {
 			draw_square(gc, pixmap, stone[0], stone[1])
+			if player == 1 {
+				gc.SetRgbFgColor(gdk.NewColor("white"))
+			} else {
+				gc.SetRgbFgColor(gdk.NewColor("black"))
+			}
+			pixmap.GetDrawable().DrawArc(gc, true, 810-(STONE/2),
+				((19-(game.countTake[1]+game.countTake[0])+ind)*STONE)-(STONE/2), STONE, STONE, 0, 64*360)
 		}
 		if player == 1 {
 			gc.SetRgbFgColor(gdk.NewColor("black"))
@@ -197,6 +204,18 @@ func board_display() {
 			stop = true
 		}
 		drawingarea.GetWindow().Invalidate(nil, false)
+		if vic != 0 {
+			messagedialog := gtk.NewMessageDialog(
+				newPlayerGameButton.GetTopLevelAsWindow(),
+				gtk.DIALOG_MODAL,
+				gtk.MESSAGE_INFO,
+				gtk.BUTTONS_OK,
+				WINNER)
+			messagedialog.Response(func() {
+				messagedialog.Destroy()
+			})
+			messagedialog.Run()
+		}
 	})
 
 	drawingarea.Connect("expose-event", func() {
@@ -271,7 +290,7 @@ func board_display() {
 	vbox.PackStart(statusbar, false, false, 0)
 
 	window.Add(vbox)
-	window.SetSizeRequest(WIDTH, HEIGHT+50)
+	window.SetSizeRequest(WIDTH+40, HEIGHT+50)
 	window.ShowAll()
 	gtk.Main()
 }
