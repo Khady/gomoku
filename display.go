@@ -103,7 +103,7 @@ func board_display() {
 	var gdkwin *gdk.Window
 	var pixmap *gdk.Pixmap
 	var gc *gdk.GC
-	var player int
+	var player, countTake int
 	player = 1
 	game = Gomoku{make([]int, 361), true, false, false, 1, [2]int{10, 10}}
 
@@ -177,15 +177,23 @@ func board_display() {
 		}
 		statusbar.Push(context_id, fmt.Sprintf("[Player 1/2 : %d/%d stone before death] Last move is Player %d : %d/%d",
 			game.countTake[1], game.countTake[0], player, ((x-INTER/2)/INTER)+1, ((y-INTER/2)/INTER)+1))
-		for ind, stone := range stones {
+		for _, stone := range stones {
+			countTake++
+			if (countTake > 19) {
+				break
+			}
 			draw_square(gc, pixmap, stone[0], stone[1])
 			if player == 1 {
 				gc.SetRgbFgColor(gdk.NewColor("white"))
 			} else {
 				gc.SetRgbFgColor(gdk.NewColor("black"))
 			}
-			pixmap.GetDrawable().DrawArc(gc, true, 810-(STONE/2),
-				((19-(game.countTake[1]+game.countTake[0])+ind)*STONE)-(STONE/2), STONE, STONE, 0, 64*360)
+			tmpx := 800
+			tmpy := countTake*INTER
+			tmpx = ((tmpx-INTER/2)/INTER)*INTER + INTER
+			tmpy = ((tmpy-INTER/2)/INTER)*INTER + INTER
+			pixmap.GetDrawable().DrawArc(gc, true, tmpx-(STONE/2)+10,
+				tmpy -(STONE/2), STONE, STONE, 0, 64*360)
 		}
 		if player == 1 {
 			gc.SetRgbFgColor(gdk.NewColor("black"))
