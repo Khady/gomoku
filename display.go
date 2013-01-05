@@ -7,6 +7,7 @@ import (
 	"github.com/mattn/go-gtk/gtk"
 	"os"
 	"unsafe"
+	"time"
 )
 
 var (
@@ -97,14 +98,14 @@ func board_display() {
 	window.Connect("destroy", gtk.MainQuit)
 
 	var game Gomoku
-	var endGame, doubleThree, stop bool
+	var stop bool
 	var menuitem *gtk.MenuItem
 	var gdkwin *gdk.Window
 	var pixmap *gdk.Pixmap
 	var gc *gdk.GC
 	var player int
 	player = 1
-	game = Gomoku{make([]int, 361), true, endGame, doubleThree, 1, [2]int{10, 10}}
+	game = Gomoku{make([]int, 361), true, false, false, 1, [2]int{10, 10}}
 
 	vbox := gtk.NewVBox(false, 1)
 
@@ -113,6 +114,25 @@ func board_display() {
 	statusbar := gtk.NewStatusbar()
 	context_id := statusbar.GetContextId("go-gtk")
 	statusbar.Push(context_id, "(not so) Proudly propulsed by the inglorious Gomoku Project, with love, and Golang!")
+
+	buttons := gtk.NewAlignment(0, 0, 0, 0)
+	checkbox := gtk.NewAlignment(1, 0, 0, 0)
+	newPlayerGameButton := gtk.NewButtonWithLabel("Player vs Player")
+	newIaGameButton := gtk.NewButtonWithLabel("Player vs AI")
+	threeCheckBox := gtk.NewCheckButtonWithLabel("Three and three")
+	endCheckBox := gtk.NewCheckButtonWithLabel("Unbreakable end")
+	hbox := gtk.NewHBox(false, 1)
+	hbox0 := gtk.NewHBox(false, 1)
+	hbox1 := gtk.NewHBox(false, 1)
+	hbox0.Add(newPlayerGameButton)
+	hbox0.Add(newIaGameButton)
+	hbox1.Add(threeCheckBox)
+	hbox1.Add(endCheckBox)
+	buttons.Add(hbox0)
+	checkbox.Add(hbox1)
+	hbox.Add(buttons)
+	hbox.Add(checkbox)
+	vbox.PackStart(hbox, false, true, 0)
 
 	drawingarea := gtk.NewDrawingArea()
 
@@ -147,8 +167,11 @@ func board_display() {
 			((y-INTER/2)/INTER) < 0 || ((y-INTER/2)/INTER) >= 19 {
 			return
 		}
-		fmt.Println("-------------------------------------------------------")
+
+		time0 := time.Now()
 		vic, stones, err := game.Play(((x - INTER/2) / INTER), ((y - INTER/2) / INTER))
+		time1 := time.Now()
+		fmt.Println(time1.Nanosecond() - time0.Nanosecond())
 		if err != nil {
 			return
 		}
@@ -189,18 +212,25 @@ func board_display() {
 	menubar.Append(cascademenu)
 	submenu := gtk.NewMenu()
 	cascademenu.SetSubmenu(submenu)
-	menuitem = gtk.NewMenuItemWithMnemonic("_Player Vs Player")
-	menuitem.Connect("activate", func() {
+	playermenuitem := gtk.NewMenuItemWithMnemonic("_Player Vs Player")
+	playermenuitem.Connect("activate", func() {
 		gc.SetRgbFgColor(gdk.NewColor("grey"))
 		pixmap.GetDrawable().DrawRectangle(gc, true, 0, 0, -1, -1)
-		game = Gomoku{make([]int, 361), true, endGame, doubleThree, 1, [2]int{10, 10}}
+		game = Gomoku{make([]int, 361), true, game.endgameTake, game.doubleThree, 1, [2]int{10, 10}}
 		player = 1
 		display_init_grid(gc, pixmap)
 		drawingarea.Hide()
 		drawingarea.Show()
 		stop = false
+		statusbar.Push(context_id, "(not so) Proudly propulsed by the inglorious Gomoku Project, with love, and Golang!")
 	})
-	submenu.Append(menuitem)
+	submenu.Append(playermenuitem)
+	newPlayerGameButton.Clicked(func() {
+		playermenuitem.Activate()
+	})
+	newIaGameButton.Clicked(func() {
+		playermenuitem.Activate()
+	})
 	menuitem = gtk.NewMenuItemWithMnemonic("E_xit")
 	menuitem.Connect("activate", func() {
 		gtk.MainQuit()
@@ -212,42 +242,36 @@ func board_display() {
 	submenu = gtk.NewMenu()
 	cascademenu.SetSubmenu(submenu)
 
-	checkmenuitem := gtk.NewCheckMenuItemWithMnemonic("_Three and three")
-	checkmenuitem.Connect("activate", func() {
-		if doubleThree == false {
-			doubleThree = true
+	threemenuitem := gtk.NewCheckMenuItemWithMnemonic("_Three and three")
+	threemenuitem.Connect("activate", func() {
+		if game.doubleThree == false {
+			game.doubleThree = true
 		} else {
-			doubleThree = false
+			game.doubleThree = false
 		}
-		game = Gomoku{make([]int, 361), true, endGame, doubleThree, 1, [2]int{10, 10}}
-		player = 1
-		display_init_grid(gc, pixmap)
-		drawingarea.Hide()
-		drawingarea.Show()
-		stop = false
 	})
-	submenu.Append(checkmenuitem)
+	submenu.Append(threemenuitem)
+	threeCheckBox.Connect("toggled", func() {
+		threemenuitem.Activate()
+	})
 
-	checkmenuitem = gtk.NewCheckMenuItemWithMnemonic("_Unbreakable end")
-	checkmenuitem.Connect("activate", func() {
-		if endGame == false {
-			endGame = true
+	endmenuitem := gtk.NewCheckMenuItemWithMnemonic("_Unbreakable end")
+	endmenuitem.Connect("activate", func() {
+		if game.endgameTake == false {
+			game.endgameTake = true
 		} else {
-			endGame = false
+			game.endgameTake = false
 		}
-		game = Gomoku{make([]int, 361), true, endGame, doubleThree, 1, [2]int{10, 10}}
-		player = 1
-		display_init_grid(gc, pixmap)
-		drawingarea.Hide()
-		drawingarea.Show()
-		stop = false
 	})
-	submenu.Append(checkmenuitem)
+	submenu.Append(endmenuitem)
+	endCheckBox.Connect("toggled", func() {
+		endmenuitem.Activate()
+	})
 
 	vbox.PackStart(statusbar, false, false, 0)
 
 	window.Add(vbox)
-	window.SetSizeRequest(WIDTH, HEIGHT+20)
+	window.SetSizeRequest(WIDTH, HEIGHT+50)
 	window.ShowAll()
 	gtk.Main()
 }
