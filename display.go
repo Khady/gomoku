@@ -195,6 +195,7 @@ func menu_bar(vbox *gtk.VBox) {
 		pixmap.GetDrawable().DrawRectangle(gc, true, 0, 0, -1, -1)
 		game = Gomoku{make([]int, 361), true, game.endgameTake, game.doubleThree, 1, [2]int{10, 10}}
 		player = 1
+		iamode = false
 		display_init_grid(gc, pixmap)
 		drawingarea.Hide()
 		drawingarea.Show()
@@ -206,8 +207,23 @@ func menu_bar(vbox *gtk.VBox) {
 	newPlayerGameButton.Clicked(func() {
 		playermenuitem.Activate()
 	})
+	iamenuitem := gtk.NewMenuItemWithMnemonic("_Player Vs AI")
+	iamenuitem.Connect("activate", func() {
+		gc.SetRgbFgColor(gdk.NewColor("grey"))
+		pixmap.GetDrawable().DrawRectangle(gc, true, 0, 0, -1, -1)
+		game = Gomoku{make([]int, 361), true, game.endgameTake, game.doubleThree, 1, [2]int{10, 10}}
+		player = 1
+		iamode = true
+		display_init_grid(gc, pixmap)
+		drawingarea.Hide()
+		drawingarea.Show()
+		stop = false
+		context_id := statusbar.GetContextId("go-gtk")
+		statusbar.Push(context_id, "(not so) Proudly propulsed by the inglorious Gomoku Project, with love, and Golang!")
+	})
+	submenu.Append(iamenuitem)
 	newIaGameButton.Clicked(func() {
-		playermenuitem.Activate()
+		iamenuitem.Activate()
 	})
 	menuitem = gtk.NewMenuItemWithMnemonic("E_xit")
 	menuitem.Connect("activate", func() {
@@ -286,6 +302,7 @@ func configure_board(vbox *gtk.VBox) {
 		// end check
 		event_play(x, y)
 		if iamode {
+			fmt.Println("ai turn")
 			// ia.Play(x, y)
 			event_play(x, y)
 		}
