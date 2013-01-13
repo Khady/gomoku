@@ -7,7 +7,6 @@ import (
 	"github.com/mattn/go-gtk/gtk"
 	"os"
 	"unsafe"
-	"time"
 )
 
 var (
@@ -19,6 +18,73 @@ var (
 	STONE  = CIRCLE + DEC
 	WINNER string
 )
+
+var game Gomoku
+var stop, iamode bool
+var menuitem *gtk.MenuItem
+var gdkwin *gdk.Window
+var pixmap *gdk.Pixmap
+var gc *gdk.GC
+var player, countTake int
+var statusbar *gtk.Statusbar
+var drawingarea *gtk.DrawingArea
+
+func event_play(x, y int) {
+	vic, stones, err := game.Play(x, y)
+	if err != nil {
+		return
+	}
+	context_id := statusbar.GetContextId("go-gtk")
+	statusbar.Push(context_id, fmt.Sprintf("[Player 1/2 : %d/%d stone before death] Last move is Player %d : %d/%d",
+		game.countTake[1], game.countTake[0], player, x+1, y+1))
+	for _, stone := range stones {
+		countTake++
+		if countTake > 19 {
+			break
+		}
+		draw_square(gc, pixmap, stone[0], stone[1])
+		if player == 1 {
+			gc.SetRgbFgColor(gdk.NewColor("white"))
+		} else {
+			gc.SetRgbFgColor(gdk.NewColor("black"))
+		}
+		tmpx := 800
+		tmpy := countTake * INTER
+		tmpx = ((tmpx-INTER/2)/INTER)*INTER + INTER
+		tmpy = ((tmpy-INTER/2)/INTER)*INTER + INTER
+		pixmap.GetDrawable().DrawArc(gc, true, tmpx-(STONE/2)+10,
+			tmpy-(STONE/2), STONE, STONE, 0, 64*360)
+	}
+	if player == 1 {
+		gc.SetRgbFgColor(gdk.NewColor("black"))
+		player = 2
+	} else {
+		gc.SetRgbFgColor(gdk.NewColor("white"))
+		player = 1
+	}
+	x = x*INTER + INTER
+	y = y*INTER + INTER
+	pixmap.GetDrawable().DrawArc(gc, true, x-(STONE/2), y-(STONE/2), STONE, STONE, 0, 64*360)
+	if vic != 0 {
+		WINNER = fmt.Sprintf("And the winner is \"Player %d\"", vic)
+		context_id := statusbar.GetContextId("go-gtk")
+		statusbar.Push(context_id, WINNER)
+		stop = true
+	}
+	drawingarea.GetWindow().Invalidate(nil, false)
+	if vic != 0 {
+		messagedialog := gtk.NewMessageDialog(
+			statusbar.GetTopLevelAsWindow(),
+			gtk.DIALOG_MODAL,
+			gtk.MESSAGE_INFO,
+			gtk.BUTTONS_OK,
+			WINNER)
+		messagedialog.Response(func() {
+			messagedialog.Destroy()
+		})
+		messagedialog.Run()
+	}
+}
 
 func clean_side(gc *gdk.GC, pixmap *gdk.Pixmap, x1, y1, x2, y2 int) {
 	gc.SetRgbFgColor(gdk.NewColor("grey"))
@@ -89,31 +155,16 @@ func display_init_grid(gc *gdk.GC, pixmap *gdk.Pixmap) {
 		CIRCLE, CIRCLE, 0, 64*360)
 }
 
-func board_display() {
-	gtk.Init(&os.Args)
-	window := gtk.NewWindow(gtk.WINDOW_TOPLEVEL)
-	window.SetPosition(gtk.WIN_POS_CENTER)
-	window.SetTitle("Gomoku")
-	window.SetResizable(false)
-	window.Connect("destroy", gtk.MainQuit)
-
-	var game Gomoku
-	var stop bool
-	var menuitem *gtk.MenuItem
-	var gdkwin *gdk.Window
-	var pixmap *gdk.Pixmap
-	var gc *gdk.GC
-	var player, countTake int
-	player = 1
-	game = Gomoku{make([]int, 361), true, false, false, 1, [2]int{10, 10}}
-
-	vbox := gtk.NewVBox(false, 1)
-
-	menubar := gtk.NewMenuBar()
-	vbox.PackStart(menubar, false, false, 0)
-	statusbar := gtk.NewStatusbar()
+func status_bar(vbox *gtk.VBox) {
+	statusbar = gtk.NewStatusbar()
 	context_id := statusbar.GetContextId("go-gtk")
 	statusbar.Push(context_id, "(not so) Proudly propulsed by the inglorious Gomoku Project, with love, and Golang!")
+	vbox.PackStart(statusbar, false, false, 0)
+}
+
+func menu_bar(vbox *gtk.VBox) {
+	menubar := gtk.NewMenuBar()
+	vbox.PackStart(menubar, false, false, 0)
 
 	buttons := gtk.NewAlignment(0, 0, 0, 0)
 	checkbox := gtk.NewAlignment(1, 0, 0, 0)
@@ -134,107 +185,6 @@ func board_display() {
 	hbox.Add(checkbox)
 	vbox.PackStart(hbox, false, true, 0)
 
-	drawingarea := gtk.NewDrawingArea()
-
-	drawingarea.Connect("configure-event", func() {
-		if pixmap != nil {
-			pixmap.Unref()
-		}
-		var allocation gtk.Allocation
-		drawingarea.GetAllocation(&allocation)
-		pixmap = gdk.NewPixmap(drawingarea.GetWindow().GetDrawable(), allocation.Width, allocation.Height, 24)
-		gc = gdk.NewGC(pixmap.GetDrawable())
-		display_init_grid(gc, pixmap)
-	})
-
-	drawingarea.Connect("button-press-event", func(ctx *glib.CallbackContext) {
-		if stop == true {
-			return
-		}
-		if gdkwin == nil {
-			gdkwin = drawingarea.GetWindow()
-		}
-		arg := ctx.Args(0)
-		mev := *(**gdk.EventMotion)(unsafe.Pointer(&arg))
-		var mt gdk.ModifierType
-		var x, y int
-		if mev.IsHint != 0 {
-			gdkwin.GetPointer(&x, &y, &mt)
-		} else {
-			x, y = int(mev.X), int(mev.Y)
-		}
-		if ((x-INTER/2)/INTER) < 0 || ((x-INTER/2)/INTER) >= 19 ||
-			((y-INTER/2)/INTER) < 0 || ((y-INTER/2)/INTER) >= 19 {
-			return
-		}
-
-		time0 := time.Now()
-		vic, stones, err := game.Play(((x - INTER/2) / INTER), ((y - INTER/2) / INTER))
-		time1 := time.Now()
-		fmt.Println(time1.Nanosecond() - time0.Nanosecond())
-		if err != nil {
-			return
-		}
-		statusbar.Push(context_id, fmt.Sprintf("[Player 1/2 : %d/%d stone before death] Last move is Player %d : %d/%d",
-			game.countTake[1], game.countTake[0], player, ((x-INTER/2)/INTER)+1, ((y-INTER/2)/INTER)+1))
-		for _, stone := range stones {
-			countTake++
-			if (countTake > 19) {
-				break
-			}
-			draw_square(gc, pixmap, stone[0], stone[1])
-			if player == 1 {
-				gc.SetRgbFgColor(gdk.NewColor("white"))
-			} else {
-				gc.SetRgbFgColor(gdk.NewColor("black"))
-			}
-			tmpx := 800
-			tmpy := countTake*INTER
-			tmpx = ((tmpx-INTER/2)/INTER)*INTER + INTER
-			tmpy = ((tmpy-INTER/2)/INTER)*INTER + INTER
-			pixmap.GetDrawable().DrawArc(gc, true, tmpx-(STONE/2)+10,
-				tmpy -(STONE/2), STONE, STONE, 0, 64*360)
-		}
-		if player == 1 {
-			gc.SetRgbFgColor(gdk.NewColor("black"))
-			player = 2
-		} else {
-			gc.SetRgbFgColor(gdk.NewColor("white"))
-			player = 1
-		}
-		x = ((x-INTER/2)/INTER)*INTER + INTER
-		y = ((y-INTER/2)/INTER)*INTER + INTER
-		pixmap.GetDrawable().DrawArc(gc, true, x-(STONE/2), y-(STONE/2), STONE, STONE, 0, 64*360)
-		if vic != 0 {
-			WINNER = fmt.Sprintf("And the winner is \"Player %d\"", vic)
-			context_id := statusbar.GetContextId("go-gtk")
-			statusbar.Push(context_id, WINNER)
-			stop = true
-		}
-		drawingarea.GetWindow().Invalidate(nil, false)
-		if vic != 0 {
-			messagedialog := gtk.NewMessageDialog(
-				newPlayerGameButton.GetTopLevelAsWindow(),
-				gtk.DIALOG_MODAL,
-				gtk.MESSAGE_INFO,
-				gtk.BUTTONS_OK,
-				WINNER)
-			messagedialog.Response(func() {
-				messagedialog.Destroy()
-			})
-			messagedialog.Run()
-		}
-	})
-
-	drawingarea.Connect("expose-event", func() {
-		if pixmap != nil {
-			drawingarea.GetWindow().GetDrawable().DrawDrawable(gc, pixmap.GetDrawable(), 0, 0, 0, 0, -1, -1)
-		}
-	})
-
-	drawingarea.SetEvents(int(gdk.POINTER_MOTION_MASK | gdk.POINTER_MOTION_HINT_MASK | gdk.BUTTON_PRESS_MASK))
-	vbox.Add(drawingarea)
-
 	cascademenu := gtk.NewMenuItemWithMnemonic("_Game")
 	menubar.Append(cascademenu)
 	submenu := gtk.NewMenu()
@@ -249,6 +199,7 @@ func board_display() {
 		drawingarea.Hide()
 		drawingarea.Show()
 		stop = false
+		context_id := statusbar.GetContextId("go-gtk")
 		statusbar.Push(context_id, "(not so) Proudly propulsed by the inglorious Gomoku Project, with love, and Golang!")
 	})
 	submenu.Append(playermenuitem)
@@ -295,7 +246,78 @@ func board_display() {
 		endmenuitem.Activate()
 	})
 
-	vbox.PackStart(statusbar, false, false, 0)
+}
+
+func configure_board(vbox *gtk.VBox) {
+	drawingarea = gtk.NewDrawingArea()
+	drawingarea.Connect("configure-event", func() {
+		if pixmap != nil {
+			pixmap.Unref()
+		}
+		var allocation gtk.Allocation
+		drawingarea.GetAllocation(&allocation)
+		pixmap = gdk.NewPixmap(drawingarea.GetWindow().GetDrawable(), allocation.Width, allocation.Height, 24)
+		gc = gdk.NewGC(pixmap.GetDrawable())
+		display_init_grid(gc, pixmap)
+	})
+
+	drawingarea.Connect("button-press-event", func(ctx *glib.CallbackContext) {
+		// Check if the game is running and if player click in the goban
+		if stop == true {
+			return
+		}
+		if gdkwin == nil {
+			gdkwin = drawingarea.GetWindow()
+		}
+		arg := ctx.Args(0)
+		mev := *(**gdk.EventMotion)(unsafe.Pointer(&arg))
+		var mt gdk.ModifierType
+		var x, y int
+		if mev.IsHint != 0 {
+			gdkwin.GetPointer(&x, &y, &mt)
+		} else {
+			x, y = int(mev.X), int(mev.Y)
+		}
+		x = ((x-INTER/2)/INTER)
+		y = ((y-INTER/2)/INTER)
+		if x < 0 || x >= 19 || y < 0 || y >= 19 {
+			return
+		}
+		// end check
+		event_play(x, y)
+		if iamode {
+			// ia.Play(x, y)
+			event_play(x, y)
+		}
+	})
+
+	drawingarea.Connect("expose-event", func() {
+		if pixmap != nil {
+			drawingarea.GetWindow().GetDrawable().DrawDrawable(gc, pixmap.GetDrawable(), 0, 0, 0, 0, -1, -1)
+		}
+	})
+
+	drawingarea.SetEvents(int(gdk.POINTER_MOTION_MASK | gdk.POINTER_MOTION_HINT_MASK | gdk.BUTTON_PRESS_MASK))
+
+	vbox.Add(drawingarea)
+}
+
+func board_display() {
+	gtk.Init(&os.Args)
+	window := gtk.NewWindow(gtk.WINDOW_TOPLEVEL)
+	window.SetPosition(gtk.WIN_POS_CENTER)
+	window.SetTitle("Gomoku")
+	window.SetResizable(false)
+	window.Connect("destroy", gtk.MainQuit)
+
+	player = 1
+	game = Gomoku{make([]int, 361), true, false, false, 1, [2]int{10, 10}}
+
+	vbox := gtk.NewVBox(false, 1)
+
+	menu_bar(vbox)
+	configure_board(vbox)
+	status_bar(vbox)
 
 	window.Add(vbox)
 	window.SetSizeRequest(WIDTH+40, HEIGHT+50)
