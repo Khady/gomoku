@@ -303,7 +303,7 @@ func configure_board(vbox *gtk.VBox) {
 		event_play(x, y)
 		if iamode {
 			fmt.Println("ai turn")
-			// ia.Play(x, y)
+			x, y = IATurn(&game)
 			event_play(x, y)
 		}
 	})
