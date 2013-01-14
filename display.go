@@ -195,6 +195,7 @@ func menu_bar(vbox *gtk.VBox) {
 		pixmap.GetDrawable().DrawRectangle(gc, true, 0, 0, -1, -1)
 		game = Gomoku{make([]int, 361), true, game.endgameTake, game.doubleThree, 1, [2]int{10, 10}}
 		player = 1
+		countTake = 0
 		iamode = false
 		display_init_grid(gc, pixmap)
 		drawingarea.Hide()
@@ -213,6 +214,7 @@ func menu_bar(vbox *gtk.VBox) {
 		pixmap.GetDrawable().DrawRectangle(gc, true, 0, 0, -1, -1)
 		game = Gomoku{make([]int, 361), true, game.endgameTake, game.doubleThree, 1, [2]int{10, 10}}
 		player = 1
+		countTake = 0
 		iamode = true
 		display_init_grid(gc, pixmap)
 		drawingarea.Hide()
