@@ -159,14 +159,11 @@ func copyGame(dest *Gomoku, src *Gomoku) {
 // si on est dans un node min -> prendre la valeur MAX des retours
 // si on est dans un node max -> prendre la valeur MIN des retours
 // remonter
-func minMaxAlgorithm(game *Gomoku, depth int, minmax bool) (score int) {
-//	var scores []int
-	
+func minMaxAlgorithm(game *Gomoku, depth, alpha, beta int, minmax bool) int {
 	if depth == MAXDEPTH {
 		return gameHeuristicScore(&(game.board))
 	}
 	moves := getPossibleMoves(game)
-	if minmax == MAX { score = MININT } else { score = MAXINT }
 	for i := 0; i < len(moves); i++ {
 		var gameCopy Gomoku
 		
@@ -174,18 +171,34 @@ func minMaxAlgorithm(game *Gomoku, depth int, minmax bool) (score int) {
 	 	victory, _, err := gameCopy.Play(moves[i][0], moves[i][1])
 		if err == nil {
 			if victory == 0 {
-				alpha :=  minMaxAlgorithm(&gameCopy, depth + 1, !minmax)
-				if (minmax == MAX) { score = max(score, alpha) } else { score = min(score, alpha) }
+				if (minmax == MAX) {
+					alpha = max(alpha, minMaxAlgorithm(&gameCopy, depth + 1, alpha, beta, !minmax))
+					if beta <= alpha {
+						return alpha
+					}
+				} else {
+					beta = min(beta, minMaxAlgorithm(&gameCopy, depth + 1, alpha, beta, !minmax))
+					if beta <= alpha {
+						return beta
+					}
+				}
 			} else {
 				if minmax == MIN {
-					score = -42
+					return -42
+					beta = -42
 				} else {
-					score = 42
+					return 42
+					alpha = 42
 				}
 			}
 		}
 	}
-	return
+	if minmax == MIN {
+		return beta
+	} else {
+		return alpha
+	}
+	return 42 // mandatory
 }
 
 func diagonaleBottomTopCheck(board *[]int, checked *[]int, i, x, y, player int) (score int) {
@@ -338,7 +351,6 @@ func findBestMoveAccordingScores(scores [][3]int) (int, int) {
 			bestScore, bestMoveX, bestMoveY  = scores[i][0], scores[i][1], scores[i][2]
 		}
 	}
-//	fmt.Println("Best score:", scores)
 	return bestMoveX, bestMoveY
 }
 
@@ -360,7 +372,6 @@ func checkImmediateThreats(board *[]int) (int, int, bool) {
 }
 
 func findBestMove(game *Gomoku) (bestX, bestY int) {
-//	var scores [][3]int
 	var bestScore, alpha int = MININT, 0
 	
 	moves := getPossibleMoves(game)
@@ -373,12 +384,11 @@ func findBestMove(game *Gomoku) (bestX, bestY int) {
 			if vic != 0 {
 				return moves[i][0], moves[i][1]
 			}
-			alpha = minMaxAlgorithm(&gameCopy, 0, MIN)
+			alpha = minMaxAlgorithm(&gameCopy, 0, MININT, MAXINT, MIN)
 			if alpha > bestScore {
 				bestX, bestY = moves[i][0], moves[i][1]
 				bestScore = alpha
 			}
-//			scores = append(scores, [3]int{minMaxAlgorithm(&gameCopy, 0, moves[i][0], moves[i][1], MIN), moves[i][0], moves[i][1]})
 		}
 	}
 	return
