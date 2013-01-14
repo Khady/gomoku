@@ -11,8 +11,20 @@ const (
 	PION_IA = 2
 	MIN = true
 	MAX = false
-	MAXDEPTH = 1
+	MAXDEPTH = 2
+	MAXINT = int(^uint(0) >> 1)
+	MININT = -MAXINT - 1
 	)
+
+func max(a, b int) int {
+	if a <= b { return b }
+	return a
+}
+
+func min(a, b int) int {
+	if a >= b { return b }
+	return a
+}
 
 // Returns the index in slice of int of a given value.
 // -1 if the value is nowhere to be found.
@@ -147,36 +159,33 @@ func copyGame(dest *Gomoku, src *Gomoku) {
 // si on est dans un node min -> prendre la valeur MAX des retours
 // si on est dans un node max -> prendre la valeur MIN des retours
 // remonter
-func minMaxAlgorithm(game *Gomoku, depth, x, y int, minmax bool) int {
-	var scores []int
+func minMaxAlgorithm(game *Gomoku, depth int, minmax bool) (score int) {
+//	var scores []int
 	
 	if depth == MAXDEPTH {
 		return gameHeuristicScore(&(game.board))
 	}
 	moves := getPossibleMoves(game)
+	if minmax == MAX { score = MININT } else { score = MAXINT }
 	for i := 0; i < len(moves); i++ {
 		var gameCopy Gomoku
 		
 		copyGame(&gameCopy, game)
-		victory, _, err := gameCopy.Play(moves[i][0], moves[i][1])
+	 	victory, _, err := gameCopy.Play(moves[i][0], moves[i][1])
 		if err == nil {
 			if victory == 0 {
-			scores = append(scores, minMaxAlgorithm(&gameCopy, depth + 1, moves[i][0], moves[i][1], !minmax))
+				alpha :=  minMaxAlgorithm(&gameCopy, depth + 1, !minmax)
+				if (minmax == MAX) { score = max(score, alpha) } else { score = min(score, alpha) }
 			} else {
 				if minmax == MIN {
-					scores = append(scores, -42)
+					score = -42
 				} else {
-					scores = append(scores, 42)
+					score = 42
 				}
 			}
 		}
 	}
-	if minmax == MIN {
-		return minOfSlice(scores)
-	} else {
-		return maxOfSlice(scores)
-	}
-	return 42 // obligatoire sinon le compilo hurle
+	return
 }
 
 func diagonaleBottomTopCheck(board *[]int, checked *[]int, i, x, y, player int) (score int) {
@@ -329,7 +338,7 @@ func findBestMoveAccordingScores(scores [][3]int) (int, int) {
 			bestScore, bestMoveX, bestMoveY  = scores[i][0], scores[i][1], scores[i][2]
 		}
 	}
-	fmt.Println("Best score:", scores)
+//	fmt.Println("Best score:", scores)
 	return bestMoveX, bestMoveY
 }
 
@@ -350,13 +359,10 @@ func checkImmediateThreats(board *[]int) (int, int, bool) {
 	return (*board)[0], (*board)[1], false 
 }
 
-func findBestMove(game *Gomoku) (int, int) {
-	var scores [][3]int
-
-	immediateThreatX, immediateThreatY, threatened := checkImmediateThreats(&(game.board))
-	if threatened {
-		return immediateThreatX, immediateThreatY
-	}
+func findBestMove(game *Gomoku) (bestX, bestY int) {
+//	var scores [][3]int
+	var bestScore, alpha int = MININT, 0
+	
 	moves := getPossibleMoves(game)
 	for i := 0; i < len(moves); i++ {
 		var gameCopy Gomoku
@@ -365,13 +371,17 @@ func findBestMove(game *Gomoku) (int, int) {
 		vic, _, err := gameCopy.Play(moves[i][0], moves[i][1])
 		if err == nil {
 			if vic != 0 {
-				return moves[i][0], moves[i][1] 
+				return moves[i][0], moves[i][1]
 			}
-			scores = append(scores, [3]int{minMaxAlgorithm(&gameCopy, 0, moves[i][0], moves[i][1], MIN), moves[i][0], moves[i][1]})
+			alpha = minMaxAlgorithm(&gameCopy, 0, MIN)
+			if alpha > bestScore {
+				bestX, bestY = moves[i][0], moves[i][1]
+				bestScore = alpha
+			}
+//			scores = append(scores, [3]int{minMaxAlgorithm(&gameCopy, 0, moves[i][0], moves[i][1], MIN), moves[i][0], moves[i][1]})
 		}
 	}
-
-	return findBestMoveAccordingScores(scores)
+	return
 }
 
 func IATurn(game *Gomoku) (x int, y int) {
