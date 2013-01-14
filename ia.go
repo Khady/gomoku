@@ -196,7 +196,7 @@ func diagonaleBottomTopCheck(board *[]int, checked *[]int, i, x, y, player int) 
 		score = 42
 	}
 	if (x < 19 && y > 0 && (*board)[i - 18] == EMPTY) && (x2 > 0 && y2 < 19 && (*board)[j] == EMPTY) && score > 0 {
-		score += 1
+		score *= 2
 	}
 	
 	return
@@ -219,7 +219,7 @@ func diagonaleTopBottomCheck(board *[]int, checked *[]int, i, x, y, player int) 
 		score = 42
 	}
 	if (x > 0 && y > 0 && (*board)[i - 20] == EMPTY) && (x2 < 19 && y2 < 19 && (*board)[j] == EMPTY) && score > 0 {
-		score += 1
+		score *= 2
 	}
 	
 	return
@@ -241,7 +241,7 @@ func verticalCheck(board *[]int, checked *[]int, i, x, y, player int) (score int
 		score = 42
 	}
 	if (y > 0 && (*board)[i - 19] == EMPTY) && (y2 < 19 && (*board)[j] == EMPTY) && score > 0 {
-		score += 1
+		score *= 2
 	}
 	return
 }
@@ -266,7 +266,7 @@ func horizontalCheck(board *[]int, HChecked *[]int, i, x, y, player int) (score 
 		score = 42
 	}
 	if (x > 0 && (*board)[i - 1] == EMPTY) && (x2 < 19 && (*board)[j] == EMPTY) && score > 0 {
-		score += 1
+		score *= 2
 	}
 	
 	return
@@ -329,12 +329,34 @@ func findBestMoveAccordingScores(scores [][3]int) (int, int) {
 			bestScore, bestMoveX, bestMoveY  = scores[i][0], scores[i][1], scores[i][2]
 		}
 	}
+	fmt.Println("Best score:", scores)
 	return bestMoveX, bestMoveY
+}
+
+func checkImmediateThreats(board *[]int) (int, int, bool) {
+	var HuHChecked, HuVChecked, HuDTBChecked, HuDBTChecked []int
+	var x, y int = 0, 0 
+
+	for i := 0; i < len(*board); i++ {
+		if (*board)[i] == PION_HUMAN {
+			fmt.Println("Valeur du pion en ", x, y, ":", calculatePionValue(board, &HuHChecked, &HuVChecked, &HuDTBChecked, &HuDBTChecked, i, x, y))
+		}
+		x++
+		if x == 19 {
+			x = 0
+			y++
+		}
+	}
+	return (*board)[0], (*board)[1], false 
 }
 
 func findBestMove(game *Gomoku) (int, int) {
 	var scores [][3]int
-	
+
+	immediateThreatX, immediateThreatY, threatened := checkImmediateThreats(&(game.board))
+	if threatened {
+		return immediateThreatX, immediateThreatY
+	}
 	moves := getPossibleMoves(game)
 	for i := 0; i < len(moves); i++ {
 		var gameCopy Gomoku
