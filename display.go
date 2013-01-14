@@ -303,7 +303,7 @@ func configure_board(vbox *gtk.VBox) {
 		}
 		// end check
 		event_play(x, y)
-		if iamode {
+		if iamode && stop != true {
 			fmt.Println("ai turn")
 			x, y = IATurn(&game)
 			event_play(x, y)
