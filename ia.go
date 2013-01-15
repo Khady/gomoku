@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-//	"math/rand"
+	"time"
 )
 
 const (
@@ -11,7 +11,7 @@ const (
 	PION_IA = 2
 	MIN = true
 	MAX = false
-	MAXDEPTH = 2
+	MAXDEPTH = 3
 	MAXINT = int(^uint(0) >> 1)
 	MININT = -MAXINT - 1
 	)
@@ -146,61 +146,6 @@ func copyGame(dest *Gomoku, src *Gomoku) {
  	dest.countTake[1] = src.countTake[1]
 }
 
-// FOnction du Minimax Algorithm.
-// Plan de route :
-// Pour chaque noeud:
-// Si on est au MAXDEPTH: calculer le score du board ainsi obtenu. (Cela ne tient pas compte du fait ou par exemple ce coup permet de gagner...)
-// Sinon:
-// trouver tous les coups possibles pour le prochain joueur (que ce soit le joueur ou l'IA, peu importe).
-// Par coups possibles on sous-entend tous ceux qui touchent une pierre, de la couleur du joueur ou pas. Si il n'y en a pas 
-// a disposition, on va 
-// pour chaque mouvement : créer une copie du board, et jouer ce coup.
-// Ensuite relancer min-max avec le board ainsi obtenu, stocker le retour.
-// si on est dans un node min -> prendre la valeur MAX des retours
-// si on est dans un node max -> prendre la valeur MIN des retours
-// remonter
-func minMaxAlgorithm(game *Gomoku, depth, alpha, beta int, minmax bool) int {
-	if depth == MAXDEPTH {
-		return gameHeuristicScore(&(game.board))
-	}
-	moves := getPossibleMoves(game)
-	for i := 0; i < len(moves); i++ {
-		var gameCopy Gomoku
-		
-		copyGame(&gameCopy, game)
-	 	victory, _, err := gameCopy.Play(moves[i][0], moves[i][1])
-		if err == nil {
-			if victory == 0 {
-				if (minmax == MAX) {
-					alpha = max(alpha, minMaxAlgorithm(&gameCopy, depth + 1, alpha, beta, !minmax))
-					if beta <= alpha {
-						return alpha
-					}
-				} else {
-					beta = min(beta, minMaxAlgorithm(&gameCopy, depth + 1, alpha, beta, !minmax))
-					if beta <= alpha {
-						return beta
-					}
-				}
-			} else {
-				if minmax == MIN {
-					return -42
-					beta = -42
-				} else {
-					return 42
-					alpha = 42
-				}
-			}
-		}
-	}
-	if minmax == MIN {
-		return beta
-	} else {
-		return alpha
-	}
-	return 42 // mandatory
-}
-
 func diagonaleBottomTopCheck(board *[]int, checked *[]int, i, x, y, player int) (score int) {
 	var x2, y2, j int = x - 1, y + 1, i + 18
 
@@ -218,7 +163,7 @@ func diagonaleBottomTopCheck(board *[]int, checked *[]int, i, x, y, player int) 
 		score = 42
 	}
 	if (x < 19 && y > 0 && (*board)[i - 18] == EMPTY) && (x2 > 0 && y2 < 19 && (*board)[j] == EMPTY) && score > 0 {
-		score *= 2
+		score *= score
 	}
 	
 	return
@@ -241,7 +186,7 @@ func diagonaleTopBottomCheck(board *[]int, checked *[]int, i, x, y, player int) 
 		score = 42
 	}
 	if (x > 0 && y > 0 && (*board)[i - 20] == EMPTY) && (x2 < 19 && y2 < 19 && (*board)[j] == EMPTY) && score > 0 {
-		score *= 2
+		score *= score
 	}
 	
 	return
@@ -263,7 +208,7 @@ func verticalCheck(board *[]int, checked *[]int, i, x, y, player int) (score int
 		score = 42
 	}
 	if (y > 0 && (*board)[i - 19] == EMPTY) && (y2 < 19 && (*board)[j] == EMPTY) && score > 0 {
-		score *= 2
+		score *= score
 	}
 	return
 }
@@ -287,8 +232,8 @@ func horizontalCheck(board *[]int, HChecked *[]int, i, x, y, player int) (score 
 	} else if (score == 4) {
 		score = 42
 	}
-	if (x > 0 && (*board)[i - 1] == EMPTY) && (x2 < 19 && (*board)[j] == EMPTY) && score > 0 {
-		score *= 2
+	if (x > 0 && (*board)[i - 1] == EMPTY) && (x2 < 19 && (*board)[j] == EMPTY) && score >= 2 {
+		score *= score
 	}
 	
 	return
@@ -337,64 +282,181 @@ func gameHeuristicScore(board *[]int) int {
 	return (IAScore - HumanScore)
 }
 
-func findBestMoveAccordingScores(scores [][3]int) (int, int) {
-	var bestMoveX, bestMoveY, bestScore int = 0, 0, 0
 
-	if len(scores) > 0 {
-		bestScore, bestMoveX, bestMoveY  = scores[0][0], scores[0][1], scores[0][2]
+// FOnction du Minimax Algorithm.
+// Plan de route :
+// Pour chaque noeud:
+// Si on est au MAXDEPTH: calculer le score du board ainsi obtenu. (Cela ne tient pas compte du fait ou par exemple ce coup permet de gagner...)
+// Sinon:
+// trouver tous les coups possibles pour le prochain joueur (que ce soit le joueur ou l'IA, peu importe).
+// Par coups possibles on sous-entend tous ceux qui touchent une pierre, de la couleur du joueur ou pas. Si il n'y en a pas 
+// a disposition, on va 
+// pour chaque mouvement : créer une copie du board, et jouer ce coup.
+// Ensuite relancer min-max avec le board ainsi obtenu, stocker le retour.
+// si on est dans un node min -> prendre la valeur MAX des retours
+// si on est dans un node max -> prendre la valeur MIN des retours
+// remonter
+func minMaxAlgorithm(game *Gomoku, depth, alpha, beta int, minmax bool) int {
+	if depth == MAXDEPTH {
+		return gameHeuristicScore(&(game.board))
+	}
+	moves := getPossibleMoves(game)
+	for i := 0; i < len(moves); i++ {
+		var gameCopy Gomoku
+		
+		copyGame(&gameCopy, game)
+	 	victory, _, err := gameCopy.Play(moves[i][0], moves[i][1])
+		if err == nil {
+			if victory == 0 {
+				if (minmax == MAX) {
+					alpha = max(alpha, minMaxAlgorithm(&gameCopy, depth + 1, alpha, beta, !minmax))
+					if beta <= alpha {
+						return alpha
+					}
+				} else {
+					beta = min(beta, minMaxAlgorithm(&gameCopy, depth + 1, alpha, beta, !minmax))
+					if beta <= alpha {
+						return beta
+					}
+				}
+			} else {
+				if minmax == MIN {
+					return -42
+				} else {
+					return 42
+				}
+			}
+		}
+	}
+	if minmax == MIN {
+		return beta
 	} else {
-		fmt.Println("This should not happen")
-		// should not happen, throw a random number
+		return alpha
 	}
-	for i := 0; i < len(scores); i++ {
-		if scores[i][0] > bestScore {
-			bestScore, bestMoveX, bestMoveY  = scores[i][0], scores[i][1], scores[i][2]
-		}
-	}
-	return bestMoveX, bestMoveY
+	return 42 // mandatory
 }
 
-func checkImmediateThreats(board *[]int) (int, int, bool) {
-	var HuHChecked, HuVChecked, HuDTBChecked, HuDBTChecked []int
-	var x, y int = 0, 0 
-
-	for i := 0; i < len(*board); i++ {
-		if (*board)[i] == PION_HUMAN {
-			fmt.Println("Valeur du pion en ", x, y, ":", calculatePionValue(board, &HuHChecked, &HuVChecked, &HuDTBChecked, &HuDBTChecked, i, x, y))
-		}
-		x++
-		if x == 19 {
-			x = 0
-			y++
+func rootMinMaxCall(game *Gomoku, depth, alpha, beta int, minmax bool, ch chan int) int {
+	if depth == MAXDEPTH {
+		ch <- gameHeuristicScore(&(game.board))
+		return 42
+	}
+	moves := getPossibleMoves(game)
+	for i := 0; i < len(moves); i++ {
+		var gameCopy Gomoku
+		
+		copyGame(&gameCopy, game)
+	 	victory, _, err := gameCopy.Play(moves[i][0], moves[i][1])
+		if err == nil {
+			if victory == 0 {
+				if (minmax == MAX) {
+					alpha = max(alpha, minMaxAlgorithm(&gameCopy, depth + 1, alpha, beta, !minmax))
+					if beta <= alpha {
+						break
+					}
+				} else {
+					beta = min(beta, minMaxAlgorithm(&gameCopy, depth + 1, alpha, beta, !minmax))
+					if beta <= alpha {
+						break
+					}
+				}
+			} else {
+				if minmax == MIN {
+					beta = -42
+				} else {
+					alpha = 42
+				}
+				break
+			}
 		}
 	}
-	return (*board)[0], (*board)[1], false 
+	if minmax == MIN {
+		ch <- beta
+	} else {
+		ch <- alpha
+	}
+	return 42 // mandatory
 }
 
-func findBestMove(game *Gomoku) (bestX, bestY int) {
-	var bestScore, alpha int = MININT, 0
+func firstMinMax(game *Gomoku, depth, alpha, beta int, minmax bool) (int, int, int) {
+	var x, y, score int = 0, 0, 0
 	
 	moves := getPossibleMoves(game)
 	for i := 0; i < len(moves); i++ {
 		var gameCopy Gomoku
 		
 		copyGame(&gameCopy, game)
+		gameCopy.playerTurn = 1
+	 	victory, _, err := gameCopy.Play(moves[i][0], moves[i][1])
+		if err == nil {
+			if victory == 0 {
+				score = minMaxAlgorithm(&gameCopy, depth + 1, alpha, beta, !minmax)
+				if (minmax == MAX) {
+					if score > alpha {
+						alpha = score
+						x, y = moves[i][0], moves[i][1]
+					}
+					if alpha >= beta {
+						return alpha, moves[i][0], moves[i][1]
+					}
+				} else {
+					if score < beta {
+						beta = score
+						x, y = moves[i][0], moves[i][1]
+					}
+					if beta <= alpha {
+						return beta, moves[i][0], moves[i][1]
+					}
+				}
+			} else {
+				if minmax == MIN {
+					return -42, moves[i][0], moves[i][1]
+				} else {
+					return 42, moves[i][0], moves[i][1]
+				}
+			}
+		}
+	}
+	if minmax == MIN {
+		return beta, x, y
+	} else {
+		return alpha, x, y
+	}
+	return 42, 42, 42 // mandatory
+}
+
+func findBestMove(game *Gomoku) (bestX, bestY int) {
+//	var channels []chan int
+//	var movesResults map[[2]int]chan int
+	
+	_, bestX, bestY = firstMinMax(game, 0, MININT, MAXINT, MIN)
+/*	moves := getPossibleMoves(game)
+	for i := 0; i < len(moves); i++ {
+		var gameCopy Gomoku
+
+		copyGame(&gameCopy, game)
 		vic, _, err := gameCopy.Play(moves[i][0], moves[i][1])
 		if err == nil {
 			if vic != 0 {
 				return moves[i][0], moves[i][1]
-			}
-			alpha = minMaxAlgorithm(&gameCopy, 0, MININT, MAXINT, MIN)
-			if alpha > bestScore {
-				bestX, bestY = moves[i][0], moves[i][1]
-				bestScore = alpha
-			}
-		}
-	}
+			} */
+//			newChan := make(chan int)
+//			movesResults[ [2]int{moves[i][0], moves[i][1]} ] = newChan 
+//			channels = append(channels, newChan)
+//			rootMinMaxCall(&gameCopy, 0, MININT, MAXINT, MIN, newChan)
+//			alpha = minMaxAlgorithm(&gameCopy, 0, MININT, MAXINT, MIN)
+//			if alpha > bestScore {
+//				bestX, bestY = moves[i][0], moves[i][1]
+//				bestScore = alpha
+//			}
+//		}
+//	}
 	return
 }
 
 func IATurn(game *Gomoku) (x int, y int) {
+	tBefore := time.Now()
 	x, y = findBestMove(game)
+	fmt.Println("Le coup a pris", time.Since(tBefore))
 	return
 }
