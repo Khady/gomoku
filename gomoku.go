@@ -15,13 +15,16 @@ type Gomoku struct {
 }
 
 func (p *Gomoku) verifLine(x, y, count, time, varx, vary int) int {
-	if x+varx >= 0 && y+vary >= 0 && x+varx <= 18 && y+vary <= 18 &&
-		p.board[x+varx+(y+vary)*19] == p.playerTurn &&
-		(p.endgameTake == false || p.verifNotTakable(x+varx, y+vary)) {
+	var finalX, finalY int = x+varx, y+vary
+	var indexOfXY int = finalX + finalY*19
+
+	if finalX >= 0 && finalY >= 0 && finalX <= 18 && finalY <= 18 &&
+		p.board[indexOfXY] == p.playerTurn &&
+		(p.endgameTake == false || p.verifNotTakable(finalX, finalY, indexOfXY)) {
 		if time >= 4 {
 			return count + 1
 		} else {
-			return p.verifLine(x+varx, y+vary, count+1, time+1, varx, vary)
+			return p.verifLine(finalX, finalY, count+1, time+1, varx, vary)
 		}
 	}
 	return count
@@ -39,13 +42,15 @@ func (p *Gomoku) victory(x, y int) bool {
 }
 
 func (p *Gomoku) victoryPion(x, y int) bool {
-	if x >= 0 && y >= 0 && x <= 18 && y <= 18 && p.board[x+y*19] == p.playerTurn &&
-		(p.endgameTake == false || p.verifNotTakable(x, y)) &&
+	var indexOfXY int = x+y*19
+	
+	if x >= 0 && y >= 0 && x <= 18 && y <= 18 && p.board[indexOfXY] == p.playerTurn &&
+		(p.endgameTake == false || p.verifNotTakable(x, y, indexOfXY)) &&
 		(p.verifLine(x, y, p.verifLine(x, y, 0, 0, -1, 0), 0, 1, 0) >= 4 ||
 			p.verifLine(x, y, p.verifLine(x, y, 0, 0, 0, 1), 0, 0, -1) >= 4 ||
 			p.verifLine(x, y, p.verifLine(x, y, 0, 0, -1, -1), 0, 1, 1) >= 4 ||
 			p.verifLine(x, y, p.verifLine(x, y, 0, 0, -1, +1), 0, 1, -1) >= 4) &&
-		(p.endgameTake == false || p.verifNotTakable(x, y)) {
+		(p.endgameTake == false || p.verifNotTakable(x, y, indexOfXY)) {
 		return true
 	}
 	return false
@@ -185,68 +190,71 @@ func (p *Gomoku) otherPlayer() int {
 	return 1
 }
 
-func (p *Gomoku) verifNotTakable(x, y int) bool {
+// indexOfXY = x+y*19
+func (p *Gomoku) verifNotTakable(x, y, indexOfXY int) bool {
 	if y <= 18 && y >= 0 {
-		if x <= 16 && x >= 1 && p.board[x+1+y*19] == p.playerTurn &&
-			(p.board[x+2+y*19] == 0 || p.board[x-1+y*19] == 0) &&
-			(p.board[x+2+y*19] == p.otherPlayer() || p.board[x-1+y*19] == p.otherPlayer()) {
+		if x <= 16 && x >= 1 && p.board[indexOfXY + 1] == p.playerTurn &&
+			(p.board[indexOfXY + 2] == 0 || p.board[indexOfXY - 1] == 0) &&
+			(p.board[indexOfXY + 2] == p.otherPlayer() || p.board[indexOfXY - 1] == p.otherPlayer()) {
 			return false
 		}
-		if x <= 17 && x >= 2 && p.board[x-1+y*19] == p.playerTurn &&
-			(p.board[x-2+y*19] == 0 || p.board[x+1+y*19] == 0) &&
-			(p.board[x-2+y*19] == p.otherPlayer() || p.board[x+1+y*19] == p.otherPlayer()) {
+		if x <= 17 && x >= 2 && p.board[indexOfXY - 1] == p.playerTurn &&
+			(p.board[indexOfXY - 2] == 0 || p.board[indexOfXY + 1] == 0) &&
+			(p.board[indexOfXY - 2] == p.otherPlayer() || p.board[indexOfXY + 1] == p.otherPlayer()) {
 			return false
 		}
 	}
 	if x <= 18 && x >= 0 {
-		if y <= 17 && y >= 2 && p.board[x+(y-1)*19] == p.playerTurn &&
-			(p.board[x+(y-2)*19] == 0 || p.board[x+(y+1)*19] == 0) &&
-			(p.board[x+(y-2)*19] == p.otherPlayer() || p.board[x+(y+1)*19] == p.otherPlayer()) {
+		if y <= 17 && y >= 2 && p.board[indexOfXY - 19] == p.playerTurn &&
+			(p.board[indexOfXY - 38] == 0 || p.board[indexOfXY + 19] == 0) &&
+			(p.board[indexOfXY - 38] == p.otherPlayer() || p.board[indexOfXY + 19] == p.otherPlayer()) {
 			return false
 		}
-		if y <= 16 && y >= 1 && p.board[x+(y+1)*19] == p.playerTurn &&
-			(p.board[x+(y+2)*19] == 0 || p.board[x+(y-1)*19] == 0) &&
-			(p.board[x+(y+2)*19] == p.otherPlayer() || p.board[x+(y-1)*19] == p.otherPlayer()) {
+		if y <= 16 && y >= 1 && p.board[indexOfXY + 19] == p.playerTurn &&
+			(p.board[indexOfXY + 38] == 0 || p.board[indexOfXY - 19] == 0) &&
+			(p.board[indexOfXY + 38] == p.otherPlayer() || p.board[indexOfXY - 19] == p.otherPlayer()) {
 			return false
 		}
 	}
-	if y <= 17 && y >= 2 && x >= 2 && x <= 17 && p.board[x-1+(y-1)*19] == p.playerTurn &&
-		(p.board[x-2+(y-2)*19] == 0 || p.board[x+1+(y+1)*19] == 0) &&
-		(p.board[x-2+(y-2)*19] == p.otherPlayer() || p.board[x+1+(y+1)*19] == p.otherPlayer()) {
+	if y <= 17 && y >= 2 && x >= 2 && x <= 17 && p.board[indexOfXY - 20] == p.playerTurn &&
+		(p.board[indexOfXY - 40] == 0 || p.board[indexOfXY + 20] == 0) &&
+		(p.board[indexOfXY - 40] == p.otherPlayer() || p.board[indexOfXY + 20] == p.otherPlayer()) {
 		return false
 	}
-	if y <= 16 && y >= 2 && x >= 2 && x <= 17 && p.board[x-1+(y+1)*19] == p.playerTurn &&
-		(p.board[x-2+(y+2)*19] == 0 || p.board[x+1+(y-1)*19] == 0) &&
-		(p.board[x-2+(y+2)*19] == p.otherPlayer() || p.board[x+1+(y-1)*19] == p.otherPlayer()) {
+	if y <= 16 && y >= 2 && x >= 2 && x <= 17 && p.board[indexOfXY + 18] == p.playerTurn &&
+		(p.board[indexOfXY + 36] == 0 || p.board[indexOfXY - 18] == 0) &&
+		(p.board[indexOfXY + 36] == p.otherPlayer() || p.board[indexOfXY - 18] == p.otherPlayer()) {
 		return false
 	}
-	if y <= 16 && y >= 2 && x <= 16 && x >= 1 && p.board[x+1+(y-1)*19] == p.playerTurn &&
-		(p.board[x+2+(y-2)*19] == 0 || p.board[x-1+(y+1)*19] == 0) &&
-		(p.board[x+2+(y-2)*19] == p.otherPlayer() || p.board[x-1+(y+1)*19] == p.otherPlayer()) {
+	if y <= 16 && y >= 2 && x <= 16 && x >= 1 && p.board[indexOfXY - 18] == p.playerTurn &&
+		(p.board[indexOfXY - 36] == 0 || p.board[indexOfXY + 18] == 0) &&
+		(p.board[indexOfXY - 36] == p.otherPlayer() || p.board[indexOfXY + 18] == p.otherPlayer()) {
 		return false
 	}
-	if y <= 16 && y >= 1 && x <= 16 && x >= 1 && p.board[x+1+(y+1)*19] == p.playerTurn &&
-		(p.board[x+2+(y+2)*19] == 0 || p.board[x-1+(y-1)*19] == 0) &&
-		(p.board[x+2+(y+2)*19] == p.otherPlayer() || p.board[x-1+(y-1)*19] == p.otherPlayer()) {
+	if y <= 16 && y >= 1 && x <= 16 && x >= 1 && p.board[indexOfXY + 20] == p.playerTurn &&
+		(p.board[indexOfXY + 40] == 0 || p.board[indexOfXY - 20] == 0) &&
+		(p.board[indexOfXY + 40] == p.otherPlayer() || p.board[indexOfXY - 20] == p.otherPlayer()) {
 		return false
 	}
 	return true
 }
 
 func (p *Gomoku) Play(x, y int) (int, [][2]int, error) {
-	if p.board[x+y*19] == 0 {
-		p.board[x+y*19] = p.playerTurn
+	var indexOfXY int = x+y*19
+
+	if p.board[indexOfXY] == 0 {
+		p.board[indexOfXY] = p.playerTurn
 	} else {
 		return 0, nil, errors.New("move not valid")
 	}
 	if p.victory(x, y) {
 		return p.playerTurn, nil, nil
 	}
-	if p.board[x+y*19] != 0 && (p.doubleThree == true && p.verifDoubleThree(x, y, 0) == true) {
-		p.board[x+y*19] = 0
+	if p.board[indexOfXY] != 0 && (p.doubleThree == true && p.verifDoubleThree(x, y, 0) == true) {
+		p.board[indexOfXY] = 0
 		return 0, nil, errors.New("move not valid")
 	}
-	stones := p.prise(x, y)
+	stones := p.prise(x, y, indexOfXY)
 	if p.victory(x, y) {
 		return p.playerTurn, stones, nil
 	}
@@ -262,67 +270,105 @@ func (p *Gomoku) changePlayerTurn() {
 	}
 }
 
-func (p *Gomoku) prise(x, y int) [][2]int {
-	stones := make([][2]int, 0, 19*19)
+// indexOfXY = x+y*19
+// cette variable évite de refaire un calcul complexe à chaque utilisation d'un index
+func (p *Gomoku) prise(x, y, indexOfXY int) [][2]int {
+	stones := make([][2]int, 11)
+	var i int = 0
+	
 	if x <= 18 && y <= 18 && x >= 0 && y >= 0 {
-		if x <= 15 && p.board[x+1+y*19] == p.otherPlayer() &&
-			p.board[x+2+y*19] == p.otherPlayer() && p.board[x+3+y*19] == p.playerTurn {
-			p.board[x+2+y*19] = 0
-			p.board[x+1+y*19] = 0
-			stones = append(stones, [2]int{x + 2, y}, [2]int{x + 1, y})
+		if x <= 15 && p.board[indexOfXY + 1] == p.otherPlayer() &&
+			p.board[indexOfXY + 2] == p.otherPlayer() && p.board[indexOfXY + 3] == p.playerTurn {
+			p.board[indexOfXY + 2] = 0
+			p.board[indexOfXY + 1] = 0
+			stones[i] = [2]int{x + 2, y}
+			i++
+			stones[i] = [2]int{x + 1, y}
+			i++
+			//stones = append(stones, [2]int{x + 2, y}, [2]int{x + 1, y})
 			p.countTake[p.playerTurn-1] -= 2
 		}
-		if x >= 3 && p.board[x-1+y*19] == p.otherPlayer() &&
-			p.board[x-2+y*19] == p.otherPlayer() && p.board[x-3+y*19] == p.playerTurn {
-			p.board[x-2+y*19] = 0
-			p.board[x-1+y*19] = 0
-			stones = append(stones, [2]int{x - 2, y}, [2]int{x - 1, y})
+		if x >= 3 && p.board[indexOfXY - 1] == p.otherPlayer() &&
+			p.board[indexOfXY - 2] == p.otherPlayer() && p.board[indexOfXY - 3] == p.playerTurn {
+			p.board[indexOfXY - 2] = 0
+			p.board[indexOfXY - 1] = 0
+			stones[i] = [2]int{x - 2, y}
+			i++
+			stones[i] = [2]int{x - 1, y}
+			i++
+		//	stones = append(stones, [2]int{x - 2, y}, [2]int{x - 1, y})
 			p.countTake[p.playerTurn-1] -= 2
 		}
-		if y >= 3 && p.board[x+(y-1)*19] == p.otherPlayer() &&
-			p.board[x+(y-2)*19] == p.otherPlayer() && p.board[x+(y-3)*19] == p.playerTurn {
-			p.board[x+(y-1)*19] = 0
-			p.board[x+(y-2)*19] = 0
-			stones = append(stones, [2]int{x, y - 1}, [2]int{x, y - 2})
+		if y >= 3 && p.board[indexOfXY - 19] == p.otherPlayer() &&
+			p.board[indexOfXY - 38] == p.otherPlayer() && p.board[indexOfXY - 57] == p.playerTurn {
+			p.board[indexOfXY - 19] = 0
+			p.board[indexOfXY - 38] = 0
+			stones[i] = [2]int{x, y - 1}
+			i++
+			stones[i] = [2]int{x, y - 2}
+			i++
+//			stones = append(stones, [2]int{x, y - 1}, [2]int{x, y - 2})
 			p.countTake[p.playerTurn-1] -= 2
 		}
-		if y <= 15 && p.board[x+(y+1)*19] == p.otherPlayer() &&
-			p.board[x+(y+2)*19] == p.otherPlayer() && p.board[x+(y+3)*19] == p.playerTurn {
-			p.board[x+(y+1)*19] = 0
-			p.board[x+(y+2)*19] = 0
-			stones = append(stones, [2]int{x, y + 1}, [2]int{x, y + 2})
+		if y <= 15 && p.board[indexOfXY + 19] == p.otherPlayer() &&
+			p.board[indexOfXY + 38] == p.otherPlayer() && p.board[indexOfXY + 57] == p.playerTurn {
+			p.board[indexOfXY + 19] = 0
+			p.board[indexOfXY + 38] = 0
+			stones[i] = [2]int{x, y + 1}
+			i++
+			stones[i] = [2]int{x, y + 2}
+			i++
+//			stones = append(stones, [2]int{x, y + 1}, [2]int{x, y + 2})
 			p.countTake[p.playerTurn-1] -= 2
 		}
-		if y >= 3 && x >= 3 && p.board[x-1+(y-1)*19] == p.otherPlayer() &&
-			p.board[x-2+(y-2)*19] == p.otherPlayer() && p.board[x-3+(y-3)*19] == p.playerTurn {
-			p.board[x-1+(y-1)*19] = 0
-			p.board[x-2+(y-2)*19] = 0
-			stones = append(stones, [2]int{x - 2, y - 2}, [2]int{x - 1, y - 1})
+		if y >= 3 && x >= 3 && p.board[indexOfXY - 20] == p.otherPlayer() &&
+			p.board[indexOfXY - 40] == p.otherPlayer() && p.board[indexOfXY - 60] == p.playerTurn {
+			p.board[indexOfXY - 20] = 0
+			p.board[indexOfXY - 40] = 0
+			stones[i] = [2]int{x - 2, y - 2}
+			i++
+			stones[i] = [2]int{x - 1, y - 1}
+			i++
+///			stones = append(stones, [2]int{x - 2, y - 2}, [2]int{x - 1, y - 1})
 			p.countTake[p.playerTurn-1] -= 2
 		}
-		if y <= 15 && x >= 3 && p.board[x-1+(y+1)*19] == p.otherPlayer() &&
-			p.board[x-2+(y+2)*19] == p.otherPlayer() && p.board[x-3+(y+3)*19] == p.playerTurn {
-			p.board[x-1+(y+1)*19] = 0
-			p.board[x-2+(y+2)*19] = 0
-			stones = append(stones, [2]int{x - 2, y + 2}, [2]int{x - 1, y + 1})
+		if y <= 15 && x >= 3 && p.board[indexOfXY + 18] == p.otherPlayer() &&
+			p.board[indexOfXY + 36] == p.otherPlayer() && p.board[indexOfXY + 54] == p.playerTurn {
+			p.board[indexOfXY + 18] = 0
+			p.board[indexOfXY + 36] = 0
+			stones[i] = [2]int{x - 2, y + 2}
+			i++
+			stones[i] = [2]int{x - 1, y + 1}
+			i++
+//			stones = append(stones, [2]int{x - 2, y + 2}, [2]int{x - 1, y + 1})
 			p.countTake[p.playerTurn-1] -= 2
 		}
-		if y >= 3 && x <= 15 && p.board[x+1+(y-1)*19] == p.otherPlayer() &&
-			p.board[x+2+(y-2)*19] == p.otherPlayer() && p.board[x+3+(y-3)*19] == p.playerTurn {
-			p.board[x+1+(y-1)*19] = 0
-			p.board[x+2+(y-2)*19] = 0
-			stones = append(stones, [2]int{x + 2, y - 2}, [2]int{x + 1, y - 1})
+		if y >= 3 && x <= 15 && p.board[indexOfXY - 18] == p.otherPlayer() &&
+			p.board[indexOfXY - 36] == p.otherPlayer() && p.board[indexOfXY - 54] == p.playerTurn {
+			p.board[indexOfXY - 18] = 0
+			p.board[indexOfXY - 36] = 0
+			stones[i] = [2]int{x + 2, y - 2}
+			i++
+			stones[i] = [2]int{x + 1, y - 1}
+			i++
+//			stones = append(stones, [2]int{x + 2, y - 2}, [2]int{x + 1, y - 1})
 			p.countTake[p.playerTurn-1] -= 2
 		}
-		if y <= 15 && x <= 15 && p.board[x+1+(y+1)*19] == p.otherPlayer() &&
-			p.board[x+2+(y+2)*19] == p.otherPlayer() && p.board[x+3+(y+3)*19] == p.playerTurn {
-			p.board[x+1+(y+1)*19] = 0
-			p.board[x+2+(y+2)*19] = 0
-			stones = append(stones, [2]int{x + 2, y + 2}, [2]int{x + 1, y + 1})
+		if y <= 15 && x <= 15 && p.board[indexOfXY + 20] == p.otherPlayer() &&
+			p.board[indexOfXY + 40] == p.otherPlayer() && p.board[indexOfXY + 60] == p.playerTurn {
+			p.board[indexOfXY + 20] = 0
+			p.board[indexOfXY + 40] = 0
+			stones[i] = [2]int{x + 2, y + 2}
+			i++
+			stones[i] = [2]int{x + 1, y + 1}
+			i++
+//			stones = append(stones, [2]int{x + 2, y + 2}, [2]int{x + 1, y + 1})
 			p.countTake[p.playerTurn-1] -= 2
 		}
 	}
-	return stones
+	
+	for i := 0; i < len(stones) && stones[i] != [2]int{0, 0}; i++ {}
+	return stones[0:i]
 }
 
 func (p *Gomoku) Debug_aff() {
