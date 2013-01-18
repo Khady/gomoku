@@ -12,6 +12,7 @@ type Gomoku struct {
 	doubleThree bool
 	playerTurn  int
 	countTake   [2]int
+	timeout     int
 }
 
 func (p *Gomoku) verifLine(x, y, count, time, varx, vary int) int {

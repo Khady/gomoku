@@ -272,16 +272,35 @@ func calculatePionValue(board *[]int, checker *GridChecker, i, x, y int) (pionSc
 	return
 }
 
-func gameHeuristicScore(board *[]int) int {
+func gameHeuristicScore(board *[]int, minmax bool, playerTurn int) int {
  	var IAScore, HumanScore, x, y, i int = 0, 0, 0, 0, 0
 	var HumanChecker, IAChecker GridChecker
-
+	
 	for i = 0; i < 361; i++ {
+		if (*board)[i] != EMPTY {
+			if (minmax == MIN && (*board)[i] == playerTurn) || (minmax == MAX && (*board)[i] != playerTurn) {
+				HumanScore += calculatePionValue(board, &HumanChecker, i, x, y)
+			} else {
+				IAScore += calculatePionValue(board, &IAChecker, i, x, y)
+//				fmt.Println("wesh wesh ia score de ouf", IAScore)
+			}
+		}
+			//(*board)[i] == playerTurn {
+			//	HumanScore += calculatePionValue(board, &HumanChecker, i, x, y)
+			//} else if minmax == MAX && (*board)[i] == playerTurn {
+//
+//				IAScore += calculatePionValue(board, &IAChecker, i, x, y)
+//				fmt.Println("wesh wesh ia score de ouf", IAScore)
+//			}
+		/*} else if (*board)[i] == PION_HUMAN {
+		//	HumanScore += calculatePionValue(board, &HumanChecker, i, x, y)
+		//}
 		if (*board)[i] == PION_IA {
 			IAScore += calculatePionValue(board, &IAChecker, i, x, y)
+			fmt.Println("wesh wesh ia score de ouf", IAScore)
 		} else if (*board)[i] == PION_HUMAN {
 			HumanScore += calculatePionValue(board, &HumanChecker, i, x, y)
-		}
+		}*/
 		x++;
 		if x == 19 {
 			x = 0
@@ -307,7 +326,7 @@ func gameHeuristicScore(board *[]int) int {
 // remonter
 func minMaxAlgorithm(game *Gomoku, depth, alpha, beta, penalty int, minmax bool) int {
 	if depth == MAXDEPTH {
-		return gameHeuristicScore(&(game.board)) - penalty
+		return gameHeuristicScore(&(game.board), minmax, game.playerTurn) - penalty
 	}
 
 	moves := getPossibleMoves(game)

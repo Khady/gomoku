@@ -193,7 +193,7 @@ func menu_bar(vbox *gtk.VBox) {
 	playermenuitem.Connect("activate", func() {
 		gc.SetRgbFgColor(gdk.NewColor("grey"))
 		pixmap.GetDrawable().DrawRectangle(gc, true, 0, 0, -1, -1)
-		game = Gomoku{make([]int, 361), true, game.endgameTake, game.doubleThree, 1, [2]int{10, 10}}
+		game = Gomoku{make([]int, 361), true, game.endgameTake, game.doubleThree, 1, [2]int{10, 10}, 0}
 		player = 1
 		countTake = 0
 		iamode = false
@@ -212,7 +212,7 @@ func menu_bar(vbox *gtk.VBox) {
 	iamenuitem.Connect("activate", func() {
 		gc.SetRgbFgColor(gdk.NewColor("grey"))
 		pixmap.GetDrawable().DrawRectangle(gc, true, 0, 0, -1, -1)
-		game = Gomoku{make([]int, 361), true, game.endgameTake, game.doubleThree, 1, [2]int{10, 10}}
+		game = Gomoku{make([]int, 361), true, game.endgameTake, game.doubleThree, 1, [2]int{10, 10}, 0}
 		player = 1
 		countTake = 0
 		iamode = true
@@ -330,7 +330,7 @@ func board_display() {
 	window.Connect("destroy", gtk.MainQuit)
 
 	player = 1
-	game = Gomoku{make([]int, 361), true, false, false, 1, [2]int{10, 10}}
+	game = Gomoku{make([]int, 361), true, false, false, 1, [2]int{10, 10}, 0}
 
 	vbox := gtk.NewVBox(false, 1)
 
