@@ -29,10 +29,10 @@ var player, countTake int
 var statusbar *gtk.Statusbar
 var drawingarea *gtk.DrawingArea
 
-func event_play(x, y int) {
+func event_play(x, y int) bool {
 	vic, stones, err := game.Play(x, y)
 	if err != nil {
-		return
+		return false
 	}
 	context_id := statusbar.GetContextId("go-gtk")
 	statusbar.Push(context_id, fmt.Sprintf("[Player 1/2 : %d/%d stone before death] Last move is Player %d : %d/%d",
@@ -84,6 +84,7 @@ func event_play(x, y int) {
 		})
 		messagedialog.Run()
 	}
+	return true
 }
 
 func clean_side(gc *gdk.GC, pixmap *gdk.Pixmap, x1, y1, x2, y2 int) {
@@ -302,8 +303,7 @@ func configure_board(vbox *gtk.VBox) {
 			return
 		}
 		// end check
-		event_play(x, y)
-		if iamode && stop != true {
+		if event_play(x, y) && iamode && stop != true {
 			fmt.Println("ai turn")
 			x, y = IATurn(&game)
 			event_play(x, y)
