@@ -11,10 +11,12 @@ const (
 	PION_IA = 2
 	MIN = true
 	MAX = false
-	MAXDEPTH = 4
 	MAXINT = int(^uint(0) >> 1)
 	MININT = -MAXINT - 1
 	)
+
+// Globals
+var g_MaxDepth int = 3
 
 type GridChecker struct {
 	HChecked []int
@@ -22,7 +24,6 @@ type GridChecker struct {
 	DTBChecked []int
 	DBTChecked []int
 }
-
 
 func max(a, b int) int {
 	if a <= b { return b }
@@ -283,29 +284,12 @@ func gameHeuristicScore(board *[]int, minmax bool, playerTurn int) int {
 				HumanScore += calculatePionValue(board, &HumanChecker, i, x, y)
 			} else {
 				IAScore += calculatePionValue(board, &IAChecker, i, x, y)
-//				fmt.Println("wesh wesh ia score de ouf", IAScore)
 			}
-		}
-			//(*board)[i] == playerTurn {
-			//	HumanScore += calculatePionValue(board, &HumanChecker, i, x, y)
-			//} else if minmax == MAX && (*board)[i] == playerTurn {
-//
-//				IAScore += calculatePionValue(board, &IAChecker, i, x, y)
-//				fmt.Println("wesh wesh ia score de ouf", IAScore)
-//			}
-		/*} else if (*board)[i] == PION_HUMAN {
-		//	HumanScore += calculatePionValue(board, &HumanChecker, i, x, y)
-		//}
-		if (*board)[i] == PION_IA {
-			IAScore += calculatePionValue(board, &IAChecker, i, x, y)
-			fmt.Println("wesh wesh ia score de ouf", IAScore)
-		} else if (*board)[i] == PION_HUMAN {
-			HumanScore += calculatePionValue(board, &HumanChecker, i, x, y)
-		}*/
-		x++;
-		if x == 19 {
-			x = 0
-			y++
+			x++;
+			if x == 19 {
+				x = 0
+				y++
+			}
 		}
 	}
 	return (IAScore - HumanScore)
@@ -315,7 +299,7 @@ func gameHeuristicScore(board *[]int, minmax bool, playerTurn int) int {
 // FOnction du Minimax Algorithm.
 // Plan de route :
 // Pour chaque noeud:
-// Si on est au MAXDEPTH: calculer le score du board ainsi obtenu. (Cela ne tient pas compte du fait ou par exemple ce coup permet de gagner...)
+// Si on est au g_MaxDepth: calculer le score du board ainsi obtenu. (Cela ne tient pas compte du fait ou par exemple ce coup permet de gagner...)
 // Sinon:
 // trouver tous les coups possibles pour le prochain joueur (que ce soit le joueur ou l'IA, peu importe).
 // Par coups possibles on sous-entend tous ceux qui touchent une pierre, de la couleur du joueur ou pas. Si il n'y en a pas 
@@ -326,7 +310,7 @@ func gameHeuristicScore(board *[]int, minmax bool, playerTurn int) int {
 // si on est dans un node max -> prendre la valeur MIN des retours
 // remonter
 func minMaxAlgorithm(game *Gomoku, depth, alpha, beta, penalty int, minmax bool) int {
-	if depth == MAXDEPTH {
+	if depth == g_MaxDepth {
 		return gameHeuristicScore(&(game.board), minmax, game.playerTurn) - penalty
 	}
 
