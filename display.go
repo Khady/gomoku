@@ -20,7 +20,7 @@ var (
 )
 
 var game Gomoku
-var stop, iamode bool
+var stopGame, stopClick, iamode bool
 var menuitem *gtk.MenuItem
 var gdkwin *gdk.Window
 var pixmap *gdk.Pixmap
@@ -31,15 +31,15 @@ var drawingarea *gtk.DrawingArea
 var info *gtk.Label
 var calcHint chan bool = make(chan bool)
 
-func event_play(x, y int) bool {
+func event_play(x, y int) (bool, int) {
 	vic, stones, err := game.Play(x, y)
 	if err != nil {
-		return false
+		return false, vic
 	}
 	context_id := statusbar.GetContextId("go-gtk")
 	statusbar.Push(context_id, fmt.Sprintf("[Player 1/2 : %d/%d stone before death] Last move is Player %d : %d/%d",
 		game.countTake[1], game.countTake[0], player, x+1, y+1))
-	if hintx != lastx && hinty != lasty {
+	if hintx != lastx || hinty != lasty {
 		draw_square(gc, pixmap, hintx, hinty)
 	}
 	for _, stone := range stones {
@@ -76,22 +76,27 @@ func event_play(x, y int) bool {
 		WINNER = fmt.Sprintf("And the winner is \"Player %d\"!", vic)
 		context_id := statusbar.GetContextId("go-gtk")
 		statusbar.Push(context_id, WINNER)
-		stop = true
+		stopGame = true
 	}
 	drawingarea.GetWindow().Invalidate(nil, false)
 	if vic != 0 {
+		fmt.Println("message dialog")
 		messagedialog := gtk.NewMessageDialog(
 			statusbar.GetTopLevelAsWindow(),
 			gtk.DIALOG_MODAL,
 			gtk.MESSAGE_INFO,
 			gtk.BUTTONS_OK,
 			WINNER)
+		fmt.Println("message dialog fin init")
 		messagedialog.Response(func() {
 			messagedialog.Destroy()
 		})
+		fmt.Println("message destroy")
+		fmt.Println("message dialog run")
 		messagedialog.Run()
+		fmt.Println("message run fin")
 	}
-	return true
+	return true, vic
 }
 
 func clean_side(gc *gdk.GC, pixmap *gdk.Pixmap, x1, y1, x2, y2 int) {
@@ -210,7 +215,8 @@ func menu_bar(vbox *gtk.VBox) {
 		display_init_grid(gc, pixmap)
 		drawingarea.Hide()
 		drawingarea.Show()
-		stop = false
+		stopGame = false
+		stopClick = false
 		context_id := statusbar.GetContextId("go-gtk")
 		statusbar.Push(context_id, "(not so) Proudly propulsed by the inglorious Gomoku Project, with love, and Golang!")
 	})
@@ -229,7 +235,8 @@ func menu_bar(vbox *gtk.VBox) {
 		display_init_grid(gc, pixmap)
 		drawingarea.Hide()
 		drawingarea.Show()
-		stop = false
+		stopGame = false
+		stopClick = false
 		context_id := statusbar.GetContextId("go-gtk")
 		statusbar.Push(context_id, "(not so) Proudly propulsed by the inglorious Gomoku Project, with love, and Golang!")
 	})
@@ -276,7 +283,7 @@ func configure_board(vbox *gtk.VBox) {
 
 	drawingarea.Connect("button-press-event", func(ctx *glib.CallbackContext) {
 		// Check if the game is running and if player click in the goban
-		if stop == true {
+		if stopGame == true || stopClick == true {
 			return
 		}
 		if gdkwin == nil {
@@ -297,11 +304,11 @@ func configure_board(vbox *gtk.VBox) {
 			return
 		}
 		// end check
-		good := event_play(x, y)
-		if good && iamode && stop != true {
-			go calc_ai()
+		good, vic := event_play(x, y)
+		if good && iamode && stopGame == false && stopClick == false && vic == 0 {
+			calc_ai()
 		}
-		if good && !iamode {
+		if good && !iamode && stopGame == false && stopClick == false {
 			calcHint <- true
 		}
 	})
@@ -318,30 +325,34 @@ func configure_board(vbox *gtk.VBox) {
 }
 
 func calc_ai() {
-	stop = true
+	stopClick = true
 	info.SetLabel("AI is thinking")
 	for gtk.EventsPending() {
 		gtk.MainIteration()
 	}
 	fmt.Println("ai turn")
 	x, y := IATurn(&game)
-	event_play(x, y)
-	stop = false
-	calcHint <- true
+	_, vic := event_play(x, y)
+	stopClick = false
+	if vic == 0 {
+		calcHint <- true
+	}
 }
 
 func calc_hint() {
 	for {
 		select {
 		case <-calcHint:
-			info.SetLabel(fmt.Sprintf("Hint: calculating..."))
-			hintx, hinty = IATurn(&game)
-			xx := hintx*INTER + INTER
-			yy := hinty*INTER + INTER
-			gc.SetRgbFgColor(gdk.NewColor("green"))
-			pixmap.GetDrawable().DrawArc(gc, true, xx-(STONE/2), yy-(STONE/2), STONE, STONE, 0, 64*360)
-			info.SetLabel(fmt.Sprintf("Hint: %d/%d", hintx+1, hinty+1))
-			drawingarea.GetWindow().Invalidate(nil, false)
+			if stopGame == false && stopClick == false {
+				info.SetLabel(fmt.Sprintf("Hint: calculating..."))
+				hintx, hinty = IATurn(&game)
+				xx := hintx*INTER + INTER
+				yy := hinty*INTER + INTER
+				gc.SetRgbFgColor(gdk.NewColor("green"))
+				pixmap.GetDrawable().DrawArc(gc, true, xx-(STONE/2), yy-(STONE/2), STONE, STONE, 0, 64*360)
+				info.SetLabel(fmt.Sprintf("Hint: %d/%d", hintx+1, hinty+1))
+				drawingarea.GetWindow().Invalidate(nil, false)
+			}
 		}
 	}
 }
