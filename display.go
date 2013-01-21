@@ -294,15 +294,7 @@ func configure_board(vbox *gtk.VBox) {
 		// end check
 		good := event_play(x, y)
 		if good && iamode && stop != true {
-			stop = true
-			info.SetLabel("AI is thinking")
-			for gtk.EventsPending() {
-				gtk.MainIteration()
-			}
-			fmt.Println("ai turn")
-			x, y = IATurn(&game)
-			event_play(x, y)
-			stop = false
+			go calc_ai()
 		}
 		for gtk.EventsPending() {
 			gtk.MainIteration()
@@ -321,6 +313,18 @@ func configure_board(vbox *gtk.VBox) {
 	drawingarea.SetEvents(int(gdk.POINTER_MOTION_MASK | gdk.POINTER_MOTION_HINT_MASK | gdk.BUTTON_PRESS_MASK))
 
 	vbox.Add(drawingarea)
+}
+
+func calc_ai() {
+	stop = true
+	info.SetLabel("AI is thinking")
+	for gtk.EventsPending() {
+		gtk.MainIteration()
+	}
+	fmt.Println("ai turn")
+	x, y := IATurn(&game)
+	event_play(x, y)
+	stop = false
 }
 
 func calc_hint() {
