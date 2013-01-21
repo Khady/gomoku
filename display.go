@@ -29,6 +29,7 @@ var player, countTake int
 var statusbar *gtk.Statusbar
 var drawingarea *gtk.DrawingArea
 var hint *gtk.Label
+var calcHint chan bool = make(chan bool)
 
 func event_play(x, y int) bool {
 	vic, stones, err := game.Play(x, y)
@@ -307,12 +308,14 @@ func configure_board(vbox *gtk.VBox) {
 		}
 		// end check
 		if event_play(x, y) && iamode && stop != true {
+			for gtk.EventsPending() {
+				gtk.MainIteration()
+			}
 			fmt.Println("ai turn")
 			x, y = IATurn(&game)
 			event_play(x, y)
 		}
-		x, y = IATurn(&game)
-		hint.SetLabel(fmt.Sprintf("Hint: %d/%d", x, y))
+		calcHint <- true
 	})
 
 	drawingarea.Connect("expose-event", func() {
@@ -324,6 +327,16 @@ func configure_board(vbox *gtk.VBox) {
 	drawingarea.SetEvents(int(gdk.POINTER_MOTION_MASK | gdk.POINTER_MOTION_HINT_MASK | gdk.BUTTON_PRESS_MASK))
 
 	vbox.Add(drawingarea)
+}
+
+func calc_hint() {
+	for {
+		select {
+		case <- calcHint:
+			x, y := IATurn(&game)
+			hint.SetLabel(fmt.Sprintf("Hint: %d/%d", x + 1, y + 1))
+		}
+	}
 }
 
 func board_display() {
@@ -342,6 +355,8 @@ func board_display() {
 	menu_bar(vbox)
 	configure_board(vbox)
 	status_bar(vbox)
+
+	go calc_hint()
 
 	window.Add(vbox)
 	window.SetSizeRequest(WIDTH+40, HEIGHT+50)
