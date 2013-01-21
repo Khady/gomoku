@@ -28,6 +28,7 @@ var gc *gdk.GC
 var player, countTake int
 var statusbar *gtk.Statusbar
 var drawingarea *gtk.DrawingArea
+var hint *gtk.Label
 
 func event_play(x, y int) bool {
 	vic, stones, err := game.Play(x, y)
@@ -171,6 +172,7 @@ func menu_bar(vbox *gtk.VBox) {
 	checkbox := gtk.NewAlignment(1, 0, 0, 0)
 	newPlayerGameButton := gtk.NewButtonWithLabel("Player vs Player")
 	newIaGameButton := gtk.NewButtonWithLabel("Player vs AI")
+	hint = gtk.NewLabel("Hint: Not yet")
 	threeCheckBox := gtk.NewCheckButtonWithLabel("Three and three")
 	endCheckBox := gtk.NewCheckButtonWithLabel("Unbreakable end")
 	hbox := gtk.NewHBox(false, 1)
@@ -183,6 +185,7 @@ func menu_bar(vbox *gtk.VBox) {
 	buttons.Add(hbox0)
 	checkbox.Add(hbox1)
 	hbox.Add(buttons)
+	hbox.Add(hint)
 	hbox.Add(checkbox)
 	vbox.PackStart(hbox, false, true, 0)
 
@@ -308,6 +311,8 @@ func configure_board(vbox *gtk.VBox) {
 			x, y = IATurn(&game)
 			event_play(x, y)
 		}
+		x, y = IATurn(&game)
+		hint.SetLabel(fmt.Sprintf("Hint: %d/%d", x, y))
 	})
 
 	drawingarea.Connect("expose-event", func() {

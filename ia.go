@@ -11,7 +11,7 @@ const (
 	PION_IA = 2
 	MIN = true
 	MAX = false
-	MAXDEPTH = 4
+	MAXDEPTH = 3
 	MAXINT = int(^uint(0) >> 1)
 	MININT = -MAXINT - 1
 	)
@@ -96,11 +96,11 @@ func findMovesAroundPiece(board []int, moves *map[[2]int]bool, x, y, i int) {
 func getPossibleMoves(game *Gomoku) map[[2]int]bool {
 	var moves map[[2]int]bool = make(map[[2]int]bool)
 	var i, x, y int = 0, 0, 0
-	
+
 	for ; i < 361; i++ {
 		if game.board[i] != EMPTY {
 			findMovesAroundPiece(game.board, &moves, x, y, i)
-			
+
 		}
 		x++
 		if (x == 19) {
@@ -151,7 +151,7 @@ func diagonaleBottomTopCheck(board *[]int, checked *[]int, i, x, y, player int) 
 		score *= score
 	} else if (!oneSideFree && !otherSideFree) {
 		score = 0
-	}	
+	}
 	return
 }
 
@@ -246,7 +246,7 @@ func horizontalCheck(board *[]int, HChecked *[]int, i, x, y, player int) (score 
 		score *= score
 	} else if (!oneSideFree && !otherSideFree) {
 		score = 0
-	}	
+	}
 	return
 }
 
@@ -276,7 +276,7 @@ func calculatePionValue(board *[]int, checker *GridChecker, i, x, y int) (pionSc
 func gameHeuristicScore(board *[]int, minmax bool, playerTurn int) int {
  	var IAScore, HumanScore, x, y, i int = 0, 0, 0, 0, 0
 	var HumanChecker, IAChecker GridChecker
-	
+
 	for i = 0; i < 361; i++ {
 		if (*board)[i] != EMPTY {
 			if (minmax == MIN && (*board)[i] == playerTurn) || (minmax == MAX && (*board)[i] != playerTurn) {
@@ -318,8 +318,8 @@ func gameHeuristicScore(board *[]int, minmax bool, playerTurn int) int {
 // Si on est au MAXDEPTH: calculer le score du board ainsi obtenu. (Cela ne tient pas compte du fait ou par exemple ce coup permet de gagner...)
 // Sinon:
 // trouver tous les coups possibles pour le prochain joueur (que ce soit le joueur ou l'IA, peu importe).
-// Par coups possibles on sous-entend tous ceux qui touchent une pierre, de la couleur du joueur ou pas. Si il n'y en a pas 
-// a disposition, on va 
+// Par coups possibles on sous-entend tous ceux qui touchent une pierre, de la couleur du joueur ou pas. Si il n'y en a pas
+// a disposition, on va
 // pour chaque mouvement : créer une copie du board, et jouer ce coup.
 // Ensuite relancer min-max avec le board ainsi obtenu, stocker le retour.
 // si on est dans un node min -> prendre la valeur MAX des retours
@@ -333,7 +333,7 @@ func minMaxAlgorithm(game *Gomoku, depth, alpha, beta, penalty int, minmax bool)
 	moves := getPossibleMoves(game)
 	for move, _ := range moves {
 		var gameCopy Gomoku
-		
+
 		copyGame(&gameCopy, game)
 	 	victory, stones, err := gameCopy.Play(move[0], move[1])
 		if err == nil {
@@ -368,11 +368,11 @@ func minMaxAlgorithm(game *Gomoku, depth, alpha, beta, penalty int, minmax bool)
 
 func firstMinMax(game *Gomoku, depth, alpha, beta int, minmax bool) (int, int) {
 	var x, y, score int = 0, 0, 0
-	
+
 	moves := getPossibleMoves(game)
 	for move, _ := range moves {
 		var gameCopy Gomoku
-		
+
 		copyGame(&gameCopy, game)
 	 	victory, stones, err := gameCopy.Play(move[0], move[1])
 		if err == nil {
