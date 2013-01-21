@@ -28,7 +28,7 @@ var gc *gdk.GC
 var player, countTake int
 var statusbar *gtk.Statusbar
 var drawingarea *gtk.DrawingArea
-var hint *gtk.Label
+var info *gtk.Label
 var calcHint chan bool = make(chan bool)
 
 func event_play(x, y int) bool {
@@ -68,7 +68,7 @@ func event_play(x, y int) bool {
 	y = y*INTER + INTER
 	pixmap.GetDrawable().DrawArc(gc, true, x-(STONE/2), y-(STONE/2), STONE, STONE, 0, 64*360)
 	if vic != 0 {
-		WINNER = fmt.Sprintf("And the winner is \"Player %d\"", vic)
+		WINNER = fmt.Sprintf("And the winner is \"Player %d\"!", vic)
 		context_id := statusbar.GetContextId("go-gtk")
 		statusbar.Push(context_id, WINNER)
 		stop = true
@@ -173,7 +173,7 @@ func menu_bar(vbox *gtk.VBox) {
 	checkbox := gtk.NewAlignment(1, 0, 0, 0)
 	newPlayerGameButton := gtk.NewButtonWithLabel("Player vs Player")
 	newIaGameButton := gtk.NewButtonWithLabel("Player vs AI")
-	hint = gtk.NewLabel("Hint: Not yet")
+	info = gtk.NewLabel("Hint: Not yet")
 	threeCheckBox := gtk.NewCheckButtonWithLabel("Three and three")
 	endCheckBox := gtk.NewCheckButtonWithLabel("Unbreakable end")
 	hbox := gtk.NewHBox(false, 1)
@@ -186,7 +186,7 @@ func menu_bar(vbox *gtk.VBox) {
 	buttons.Add(hbox0)
 	checkbox.Add(hbox1)
 	hbox.Add(buttons)
-	hbox.Add(hint)
+	hbox.Add(info)
 	hbox.Add(checkbox)
 	vbox.PackStart(hbox, false, true, 0)
 
@@ -238,35 +238,20 @@ func menu_bar(vbox *gtk.VBox) {
 	})
 	submenu.Append(menuitem)
 
-	cascademenu = gtk.NewMenuItemWithMnemonic("_Rules")
-	menubar.Append(cascademenu)
-	submenu = gtk.NewMenu()
-	cascademenu.SetSubmenu(submenu)
-
-	threemenuitem := gtk.NewCheckMenuItemWithMnemonic("_Three and three")
-	threemenuitem.Connect("activate", func() {
+	threeCheckBox.Connect("toggled", func() {
 		if game.doubleThree == false {
 			game.doubleThree = true
 		} else {
 			game.doubleThree = false
 		}
 	})
-	submenu.Append(threemenuitem)
-	threeCheckBox.Connect("toggled", func() {
-		threemenuitem.Activate()
-	})
 
-	endmenuitem := gtk.NewCheckMenuItemWithMnemonic("_Unbreakable end")
-	endmenuitem.Connect("activate", func() {
+	endCheckBox.Connect("toggled", func() {
 		if game.endgameTake == false {
 			game.endgameTake = true
 		} else {
 			game.endgameTake = false
 		}
-	})
-	submenu.Append(endmenuitem)
-	endCheckBox.Connect("toggled", func() {
-		endmenuitem.Activate()
 	})
 
 }
@@ -301,21 +286,30 @@ func configure_board(vbox *gtk.VBox) {
 		} else {
 			x, y = int(mev.X), int(mev.Y)
 		}
-		x = ((x-INTER/2)/INTER)
-		y = ((y-INTER/2)/INTER)
+		x = ((x - INTER/2) / INTER)
+		y = ((y - INTER/2) / INTER)
 		if x < 0 || x >= 19 || y < 0 || y >= 19 {
 			return
 		}
 		// end check
-		if event_play(x, y) && iamode && stop != true {
+		good := event_play(x, y)
+		if good && iamode && stop != true {
+			stop = true
+			info.SetLabel("AI is thinking")
 			for gtk.EventsPending() {
 				gtk.MainIteration()
 			}
 			fmt.Println("ai turn")
 			x, y = IATurn(&game)
 			event_play(x, y)
+			stop = false
 		}
-		calcHint <- true
+		for gtk.EventsPending() {
+			gtk.MainIteration()
+		}
+		if good {
+			calcHint <- true
+		}
 	})
 
 	drawingarea.Connect("expose-event", func() {
@@ -332,9 +326,10 @@ func configure_board(vbox *gtk.VBox) {
 func calc_hint() {
 	for {
 		select {
-		case <- calcHint:
+		case <-calcHint:
+			info.SetLabel(fmt.Sprintf("Hint: calculating..."))
 			x, y := IATurn(&game)
-			hint.SetLabel(fmt.Sprintf("Hint: %d/%d", x + 1, y + 1))
+			info.SetLabel(fmt.Sprintf("Hint: %d/%d", x+1, y+1))
 		}
 	}
 }

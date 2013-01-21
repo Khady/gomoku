@@ -6,31 +6,34 @@ import (
 )
 
 const (
-	EMPTY = 0
+	EMPTY      = 0
 	PION_HUMAN = 1
-	PION_IA = 2
-	MIN = true
-	MAX = false
-	MAXDEPTH = 3
-	MAXINT = int(^uint(0) >> 1)
-	MININT = -MAXINT - 1
-	)
+	PION_IA    = 2
+	MIN        = true
+	MAX        = false
+	MAXDEPTH   = 3
+	MAXINT     = int(^uint(0) >> 1)
+	MININT     = -MAXINT - 1
+)
 
 type GridChecker struct {
-	HChecked []int
-	VChecked []int
+	HChecked   []int
+	VChecked   []int
 	DTBChecked []int
 	DBTChecked []int
 }
 
-
 func max(a, b int) int {
-	if a <= b { return b }
+	if a <= b {
+		return b
+	}
 	return a
 }
 
 func min(a, b int) int {
-	if a >= b { return b }
+	if a >= b {
+		return b
+	}
 	return a
 }
 
@@ -38,11 +41,11 @@ func min(a, b int) int {
 // -1 if the value is nowhere to be found.
 func getValueIndex(slice []int, searched int) int {
 	for index, value := range slice {
-		if (value == searched) {
+		if value == searched {
 			return index
 		}
 	}
-    return -1
+	return -1
 }
 
 func notAlreadyInMoves(moves *map[[2]int]bool, x, y int) bool {
@@ -65,28 +68,28 @@ func notAlreadyInMoves(moves *map[[2]int]bool, x, y int) bool {
 // NB 2: la fonction vérifie que chaque case n'a pas déjà été signalée comme libre afin de
 // ne pas faire de doublon.
 func findMovesAroundPiece(board []int, moves *map[[2]int]bool, x, y, i int) {
-	if x > 0 && board[i - 1] == EMPTY && notAlreadyInMoves(moves, x - 1, y) {
+	if x > 0 && board[i-1] == EMPTY && notAlreadyInMoves(moves, x-1, y) {
 		(*moves)[[2]int{x - 1, y}] = true
 	}
-	if x < 18 && board[i + 1] == EMPTY && notAlreadyInMoves(moves, x + 1, y) {
+	if x < 18 && board[i+1] == EMPTY && notAlreadyInMoves(moves, x+1, y) {
 		(*moves)[[2]int{x + 1, y}] = true
 	}
-	if y > 0 && board[i - 19] == EMPTY && notAlreadyInMoves(moves, x, y - 1) {
+	if y > 0 && board[i-19] == EMPTY && notAlreadyInMoves(moves, x, y-1) {
 		(*moves)[[2]int{x, y - 1}] = true
 	}
-	if y < 18 && board[i + 19] == EMPTY && notAlreadyInMoves(moves, x, y + 1) {
+	if y < 18 && board[i+19] == EMPTY && notAlreadyInMoves(moves, x, y+1) {
 		(*moves)[[2]int{x, y + 1}] = true
 	}
-	if x > 0 && y > 0 && board[i - 20] == EMPTY && notAlreadyInMoves(moves, x - 1, y - 1) {
+	if x > 0 && y > 0 && board[i-20] == EMPTY && notAlreadyInMoves(moves, x-1, y-1) {
 		(*moves)[[2]int{x - 1, y - 1}] = true
 	}
-	if x > 0 && y < 18 && board[i + 18] == EMPTY && notAlreadyInMoves(moves, x - 1, y + 1) {
+	if x > 0 && y < 18 && board[i+18] == EMPTY && notAlreadyInMoves(moves, x-1, y+1) {
 		(*moves)[[2]int{x - 1, y + 1}] = true
 	}
-	if x < 18 && y > 0 && board[i - 18] == EMPTY && notAlreadyInMoves(moves, x + 1, y - 1) {
+	if x < 18 && y > 0 && board[i-18] == EMPTY && notAlreadyInMoves(moves, x+1, y-1) {
 		(*moves)[[2]int{x + 1, y - 1}] = true
 	}
-	if x < 18 && y < 18 && board[i + 20] == EMPTY && notAlreadyInMoves(moves, x + 1, y + 1) {
+	if x < 18 && y < 18 && board[i+20] == EMPTY && notAlreadyInMoves(moves, x+1, y+1) {
 		(*moves)[[2]int{x + 1, y + 1}] = true
 	}
 }
@@ -103,7 +106,7 @@ func getPossibleMoves(game *Gomoku) map[[2]int]bool {
 
 		}
 		x++
-		if (x == 19) {
+		if x == 19 {
 			x = 0
 			y++
 		}
@@ -116,12 +119,12 @@ func copyGame(dest *Gomoku, src *Gomoku) {
 	dest.board = make([]int, len(src.board)) // important
 	copy(dest.board, src.board)
 	dest.gameType = src.gameType
- 	dest.endgameTake = src.endgameTake
- 	dest.doubleThree = src.doubleThree
- 	dest.playerTurn = src.playerTurn
- 	dest.playerTurn = src.playerTurn
- 	dest.countTake[0] = src.countTake[0]
- 	dest.countTake[1] = src.countTake[1]
+	dest.endgameTake = src.endgameTake
+	dest.doubleThree = src.doubleThree
+	dest.playerTurn = src.playerTurn
+	dest.playerTurn = src.playerTurn
+	dest.countTake[0] = src.countTake[0]
+	dest.countTake[1] = src.countTake[1]
 }
 
 func diagonaleBottomTopCheck(board *[]int, checked *[]int, i, x, y, player int) (score int) {
@@ -135,12 +138,12 @@ func diagonaleBottomTopCheck(board *[]int, checked *[]int, i, x, y, player int) 
 		x2--
 		y2++
 	}
-	if (score > 4) {
+	if score > 4 {
 		score = 0
-	} else if (score == 4) {
+	} else if score == 4 {
 		score = 42
 	}
-	oneSideFree := (x < 19 && y > 0 && (*board)[i - 18] == EMPTY)
+	oneSideFree := (x < 19 && y > 0 && (*board)[i-18] == EMPTY)
 	if oneSideFree {
 		score += 1
 	} else {
@@ -149,7 +152,7 @@ func diagonaleBottomTopCheck(board *[]int, checked *[]int, i, x, y, player int) 
 	otherSideFree := (x2 > 0 && y2 < 19 && (*board)[j] == EMPTY)
 	if oneSideFree && otherSideFree && score >= 2 {
 		score *= score
-	} else if (!oneSideFree && !otherSideFree) {
+	} else if !oneSideFree && !otherSideFree {
 		score = 0
 	}
 	return
@@ -166,12 +169,12 @@ func diagonaleTopBottomCheck(board *[]int, checked *[]int, i, x, y, player int) 
 		x2++
 		y2++
 	}
-	if (score > 4) {
+	if score > 4 {
 		score = 0
-	} else if (score == 4) {
+	} else if score == 4 {
 		score = 42
 	}
-	oneSideFree := (x > 0 && y > 0 && (*board)[i - 20] == EMPTY)
+	oneSideFree := (x > 0 && y > 0 && (*board)[i-20] == EMPTY)
 	if oneSideFree {
 		score += 1
 	} else {
@@ -180,7 +183,7 @@ func diagonaleTopBottomCheck(board *[]int, checked *[]int, i, x, y, player int) 
 	otherSideFree := (x2 < 19 && y2 < 19 && (*board)[j] == EMPTY)
 	if oneSideFree && otherSideFree && score >= 2 {
 		score *= score
-	} else if (!oneSideFree && !otherSideFree) {
+	} else if !oneSideFree && !otherSideFree {
 		score = 0
 	}
 	return
@@ -196,12 +199,12 @@ func verticalCheck(board *[]int, checked *[]int, i, x, y, player int) (score int
 		j += 19
 		y2++
 	}
-	if (score > 4) {
+	if score > 4 {
 		score = 0
-	} else if (score == 4) {
+	} else if score == 4 {
 		score = 42
 	}
-	oneSideFree := (y > 0 && (*board)[i - 19] == EMPTY)
+	oneSideFree := (y > 0 && (*board)[i-19] == EMPTY)
 	if oneSideFree {
 		score += 1
 	} else {
@@ -210,7 +213,7 @@ func verticalCheck(board *[]int, checked *[]int, i, x, y, player int) (score int
 	otherSideFree := (y2 < 19 && (*board)[j] == EMPTY)
 	if oneSideFree && otherSideFree && score >= 2 {
 		score *= score
-	} else if (!oneSideFree && !otherSideFree) {
+	} else if !oneSideFree && !otherSideFree {
 		score = 0
 	}
 	return
@@ -230,12 +233,12 @@ func horizontalCheck(board *[]int, HChecked *[]int, i, x, y, player int) (score 
 		j++
 		x2++
 	}
-	if (score > 4) {
+	if score > 4 {
 		score = 0
-	} else if (score == 4) {
+	} else if score == 4 {
 		score = 42
 	}
-	oneSideFree := (x > 0 && (*board)[i - 1] == EMPTY)
+	oneSideFree := (x > 0 && (*board)[i-1] == EMPTY)
 	if oneSideFree {
 		score += 1
 	} else {
@@ -244,7 +247,7 @@ func horizontalCheck(board *[]int, HChecked *[]int, i, x, y, player int) (score 
 	otherSideFree := (x2 < 19 && (*board)[j] == EMPTY)
 	if oneSideFree && otherSideFree && score >= 2 {
 		score *= score
-	} else if (!oneSideFree && !otherSideFree) {
+	} else if !oneSideFree && !otherSideFree {
 		score = 0
 	}
 	return
@@ -274,7 +277,7 @@ func calculatePionValue(board *[]int, checker *GridChecker, i, x, y int) (pionSc
 }
 
 func gameHeuristicScore(board *[]int, minmax bool, playerTurn int) int {
- 	var IAScore, HumanScore, x, y, i int = 0, 0, 0, 0, 0
+	var IAScore, HumanScore, x, y, i int = 0, 0, 0, 0, 0
 	var HumanChecker, IAChecker GridChecker
 
 	for i = 0; i < 361; i++ {
@@ -283,16 +286,16 @@ func gameHeuristicScore(board *[]int, minmax bool, playerTurn int) int {
 				HumanScore += calculatePionValue(board, &HumanChecker, i, x, y)
 			} else {
 				IAScore += calculatePionValue(board, &IAChecker, i, x, y)
-//				fmt.Println("wesh wesh ia score de ouf", IAScore)
+				//				fmt.Println("wesh wesh ia score de ouf", IAScore)
 			}
 		}
-			//(*board)[i] == playerTurn {
-			//	HumanScore += calculatePionValue(board, &HumanChecker, i, x, y)
-			//} else if minmax == MAX && (*board)[i] == playerTurn {
-//
-//				IAScore += calculatePionValue(board, &IAChecker, i, x, y)
-//				fmt.Println("wesh wesh ia score de ouf", IAScore)
-//			}
+		//(*board)[i] == playerTurn {
+		//	HumanScore += calculatePionValue(board, &HumanChecker, i, x, y)
+		//} else if minmax == MAX && (*board)[i] == playerTurn {
+		//
+		//				IAScore += calculatePionValue(board, &IAChecker, i, x, y)
+		//				fmt.Println("wesh wesh ia score de ouf", IAScore)
+		//			}
 		/*} else if (*board)[i] == PION_HUMAN {
 		//	HumanScore += calculatePionValue(board, &HumanChecker, i, x, y)
 		//}
@@ -302,7 +305,7 @@ func gameHeuristicScore(board *[]int, minmax bool, playerTurn int) int {
 		} else if (*board)[i] == PION_HUMAN {
 			HumanScore += calculatePionValue(board, &HumanChecker, i, x, y)
 		}*/
-		x++;
+		x++
 		if x == 19 {
 			x = 0
 			y++
@@ -310,7 +313,6 @@ func gameHeuristicScore(board *[]int, minmax bool, playerTurn int) int {
 	}
 	return (IAScore - HumanScore)
 }
-
 
 // FOnction du Minimax Algorithm.
 // Plan de route :
@@ -335,16 +337,16 @@ func minMaxAlgorithm(game *Gomoku, depth, alpha, beta, penalty int, minmax bool)
 		var gameCopy Gomoku
 
 		copyGame(&gameCopy, game)
-	 	victory, stones, err := gameCopy.Play(move[0], move[1])
+		victory, stones, err := gameCopy.Play(move[0], move[1])
 		if err == nil {
 			if victory == 0 {
-				if (minmax == MAX) {
-					alpha = max(alpha, minMaxAlgorithm(&gameCopy, depth + 1, alpha, beta, penalty - len(stones), !minmax))
+				if minmax == MAX {
+					alpha = max(alpha, minMaxAlgorithm(&gameCopy, depth+1, alpha, beta, penalty-len(stones), !minmax))
 					if beta <= alpha {
 						return alpha
 					}
 				} else {
-					beta = min(beta, minMaxAlgorithm(&gameCopy, depth + 1, alpha, beta, penalty + len(stones), !minmax))
+					beta = min(beta, minMaxAlgorithm(&gameCopy, depth+1, alpha, beta, penalty+len(stones), !minmax))
 					if beta <= alpha {
 						return beta
 					}
@@ -374,11 +376,11 @@ func firstMinMax(game *Gomoku, depth, alpha, beta int, minmax bool) (int, int) {
 		var gameCopy Gomoku
 
 		copyGame(&gameCopy, game)
-	 	victory, stones, err := gameCopy.Play(move[0], move[1])
+		victory, stones, err := gameCopy.Play(move[0], move[1])
 		if err == nil {
 			if victory == 0 {
-				if (minmax == MAX) {
-					score = minMaxAlgorithm(&gameCopy, depth + 1, alpha, beta, -len(stones), !minmax)
+				if minmax == MAX {
+					score = minMaxAlgorithm(&gameCopy, depth+1, alpha, beta, -len(stones), !minmax)
 					if score > alpha {
 						alpha = score
 						x, y = move[0], move[1]
@@ -387,7 +389,7 @@ func firstMinMax(game *Gomoku, depth, alpha, beta int, minmax bool) (int, int) {
 						return move[0], move[1]
 					}
 				} else {
-					score = minMaxAlgorithm(&gameCopy, depth + 1, alpha, beta, len(stones), !minmax)
+					score = minMaxAlgorithm(&gameCopy, depth+1, alpha, beta, len(stones), !minmax)
 					if score < beta {
 						beta = score
 						x, y = move[0], move[1]
