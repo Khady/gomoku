@@ -25,7 +25,7 @@ var menuitem *gtk.MenuItem
 var gdkwin *gdk.Window
 var pixmap *gdk.Pixmap
 var gc *gdk.GC
-var player, countTake int
+var player, countTake, hintx, hinty, lastx, lasty int
 var statusbar *gtk.Statusbar
 var drawingarea *gtk.DrawingArea
 var info *gtk.Label
@@ -39,6 +39,9 @@ func event_play(x, y int) bool {
 	context_id := statusbar.GetContextId("go-gtk")
 	statusbar.Push(context_id, fmt.Sprintf("[Player 1/2 : %d/%d stone before death] Last move is Player %d : %d/%d",
 		game.countTake[1], game.countTake[0], player, x+1, y+1))
+	if hintx != lastx && hinty != lasty {
+		draw_square(gc, pixmap, hintx, hinty)
+	}
 	for _, stone := range stones {
 		countTake++
 		if countTake > 19 {
@@ -64,6 +67,8 @@ func event_play(x, y int) bool {
 		gc.SetRgbFgColor(gdk.NewColor("white"))
 		player = 1
 	}
+	lastx = x
+	lasty = y
 	x = x*INTER + INTER
 	y = y*INTER + INTER
 	pixmap.GetDrawable().DrawArc(gc, true, x-(STONE/2), y-(STONE/2), STONE, STONE, 0, 64*360)
@@ -296,10 +301,7 @@ func configure_board(vbox *gtk.VBox) {
 		if good && iamode && stop != true {
 			go calc_ai()
 		}
-		for gtk.EventsPending() {
-			gtk.MainIteration()
-		}
-		if good {
+		if good && !iamode {
 			calcHint <- true
 		}
 	})
@@ -325,6 +327,7 @@ func calc_ai() {
 	x, y := IATurn(&game)
 	event_play(x, y)
 	stop = false
+	calcHint <- true
 }
 
 func calc_hint() {
@@ -332,8 +335,13 @@ func calc_hint() {
 		select {
 		case <-calcHint:
 			info.SetLabel(fmt.Sprintf("Hint: calculating..."))
-			x, y := IATurn(&game)
-			info.SetLabel(fmt.Sprintf("Hint: %d/%d", x+1, y+1))
+			hintx, hinty = IATurn(&game)
+			xx := hintx*INTER + INTER
+			yy := hinty*INTER + INTER
+			gc.SetRgbFgColor(gdk.NewColor("green"))
+			pixmap.GetDrawable().DrawArc(gc, true, xx-(STONE/2), yy-(STONE/2), STONE, STONE, 0, 64*360)
+			info.SetLabel(fmt.Sprintf("Hint: %d/%d", hintx+1, hinty+1))
+			drawingarea.GetWindow().Invalidate(nil, false)
 		}
 	}
 }

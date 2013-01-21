@@ -11,7 +11,7 @@ const (
 	PION_IA    = 2
 	MIN        = true
 	MAX        = false
-	MAXDEPTH   = 5
+	MAXDEPTH   = 3
 	MAXINT     = int(^uint(0) >> 1)
 	MININT     = -MAXINT - 1
 )
