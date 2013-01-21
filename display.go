@@ -20,7 +20,7 @@ var (
 )
 
 var game Gomoku
-var stopGame, stopClick, iamode bool
+var hint, stopGame, stopClick, iamode bool
 var menuitem *gtk.MenuItem
 var gdkwin *gdk.Window
 var pixmap *gdk.Pixmap
@@ -186,11 +186,13 @@ func menu_bar(vbox *gtk.VBox) {
 	info = gtk.NewLabel("Hint: Not yet")
 	threeCheckBox := gtk.NewCheckButtonWithLabel("Three and three")
 	endCheckBox := gtk.NewCheckButtonWithLabel("Unbreakable end")
+	hintCheckBox := gtk.NewCheckButtonWithLabel("Hint")
 	hbox := gtk.NewHBox(false, 1)
 	hbox0 := gtk.NewHBox(false, 1)
 	hbox1 := gtk.NewHBox(false, 1)
 	hbox0.Add(newPlayerGameButton)
 	hbox0.Add(newIaGameButton)
+	hbox1.Add(hintCheckBox)
 	hbox1.Add(threeCheckBox)
 	hbox1.Add(endCheckBox)
 	buttons.Add(hbox0)
@@ -266,6 +268,15 @@ func menu_bar(vbox *gtk.VBox) {
 		}
 	})
 
+	hintCheckBox.Connect("toggled", func() {
+		if hint == false {
+			hint = true
+			calcHint <- true
+		} else {
+			hint = false
+		}
+	})
+
 }
 
 func configure_board(vbox *gtk.VBox) {
@@ -308,7 +319,7 @@ func configure_board(vbox *gtk.VBox) {
 		if good && iamode && stopGame == false && stopClick == false && vic == 0 {
 			calc_ai()
 		}
-		if good && !iamode && stopGame == false && stopClick == false {
+		if good && !iamode && stopGame == false && stopClick == false && hint {
 			calcHint <- true
 		}
 	})
@@ -334,7 +345,8 @@ func calc_ai() {
 	x, y := IATurn(&game)
 	_, vic := event_play(x, y)
 	stopClick = false
-	if vic == 0 {
+	info.SetLabel("AI is proud")
+	if vic == 0 && hint {
 		calcHint <- true
 	}
 }
