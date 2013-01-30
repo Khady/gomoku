@@ -39,7 +39,7 @@ func event_play(x, y int) (bool, int) {
 	context_id := statusbar.GetContextId("go-gtk")
 	statusbar.Push(context_id, fmt.Sprintf("[Player 1/2 : %d/%d stone before death] Last move is Player %d : %d/%d",
 		game.countTake[1], game.countTake[0], player, x+1, y+1))
-	if hintx != lastx || hinty != lasty {
+	if (hintx != lastx || hinty != lasty) && (hintx >= 0 && hinty >= 0) {
 		draw_square(gc, pixmap, hintx, hinty)
 	}
 	for _, stone := range stones {
@@ -385,6 +385,8 @@ func board_display() {
 	menu_bar(vbox)
 	configure_board(vbox)
 	status_bar(vbox)
+
+	hintx, hinty, lastx, lasty = -1, -1, -1, -1
 
 	go calc_hint()
 
