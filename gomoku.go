@@ -20,13 +20,12 @@ func (p *Gomoku) verifLine(x, y, count, time, varx, vary int) int {
 	var indexOfXY int = finalX + finalY*19
 
 	if finalX >= 0 && finalY >= 0 && finalX <= 18 && finalY <= 18 &&
-		p.board[indexOfXY] == p.playerTurn &&
-		(p.endgameTake == false || p.verifNotTakable(finalX, finalY, indexOfXY)) {
-		if time >= 4 {
+		p.board[indexOfXY] == p.playerTurn {
+		if time >= 4  && (p.endgameTake == false || p.verifNotTakable(finalX, finalY, indexOfXY)) {
 			return count + 1
-		} else {
-			return p.verifLine(finalX, finalY, count+1, time+1, varx, vary)
-		}
+		} else if p.verifLine(finalX, finalY, count+1, time+1, varx, vary) >= 4 &&
+			(p.endgameTake == false || p.verifNotTakable(finalX, finalY, indexOfXY)) {
+			return 5		}
 	}
 	return count
 }
