@@ -1,10 +1,5 @@
 package main
 
-import (
-	"fmt"
-	"time"
-)
-
 const (
 	EMPTY      = 0
 	PION_HUMAN = 1
@@ -412,8 +407,6 @@ func firstMinMax(game *Gomoku, depth, alpha, beta int, minmax bool) (int, int) {
 }
 
 func IATurn(game *Gomoku) (x int, y int) {
-	tBefore := time.Now()
 	x, y = firstMinMax(game, 0, MININT, MAXINT, MAX)
-	fmt.Println("Le coup a pris", time.Since(tBefore))
 	return
 }

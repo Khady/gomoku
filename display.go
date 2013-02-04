@@ -80,21 +80,16 @@ func event_play(x, y int) (bool, int) {
 	}
 	drawingarea.GetWindow().Invalidate(nil, false)
 	if vic != 0 {
-		fmt.Println("message dialog")
 		messagedialog := gtk.NewMessageDialog(
 			statusbar.GetTopLevelAsWindow(),
 			gtk.DIALOG_MODAL,
 			gtk.MESSAGE_INFO,
 			gtk.BUTTONS_OK,
 			WINNER)
-		fmt.Println("message dialog fin init")
 		messagedialog.Response(func() {
 			messagedialog.Destroy()
 		})
-		fmt.Println("message destroy")
-		fmt.Println("message dialog run")
 		messagedialog.Run()
-		fmt.Println("message run fin")
 	}
 	return true, vic
 }
@@ -341,7 +336,6 @@ func calc_ai() {
 	for gtk.EventsPending() {
 		gtk.MainIteration()
 	}
-	fmt.Println("ai turn")
 	x, y := IATurn(&game)
 	_, vic := event_play(x, y)
 	stopClick = false
